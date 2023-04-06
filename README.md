@@ -223,7 +223,7 @@ Before benchmarking a node that contain a DNN, the DNN must first be downloaded 
 
 ### Results
 
-The [Isaac ROS Performance Summary](https://github.com/NVIDIA-ISAAC-ROS/nvidia-isaac-ros/blob/main/profile/performance-summary.md) provides an overview of the benchmark results for the Isaac ROS configurations detailed above, along with links to each of the results in JSON format.
+The [Isaac ROS Performance Summary](https://github.com/NVIDIA-ISAAC-ROS/.github/blob/main/profile/performance-summary.md) provides an overview of the benchmark results for the Isaac ROS configurations detailed above, along with links to each of the results in JSON format.
 
 ## Profiling
 
