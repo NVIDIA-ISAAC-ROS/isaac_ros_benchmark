@@ -1,0 +1,23 @@
+# Images
+*.gif filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.png filter=lfs diff=lfs merge=lfs -text
+*.psd filter=lfs diff=lfs merge=lfs -text
+# Archives
+*.gz filter=lfs diff=lfs merge=lfs -text
+*.tar filter=lfs diff=lfs merge=lfs -text
+*.zip filter=lfs diff=lfs merge=lfs -text
+# Documents
+*.pdf filter=lfs diff=lfs merge=lfs -text
+# Numpy data
+*.npy filter=lfs diff=lfs merge=lfs -text
+# For Plan files
+*.plan filter=lfs diff=lfs merge=lfs -text
+# For Onnx files
+*.onnx filter=lfs diff=lfs merge=lfs -text
+# For PCD files
+*.pcd filter=lfs diff=lfs merge=lfs -text
+# For etlt files
+*.etlt filter=lfs diff=lfs merge=lfs -text
+# For ROS bag files
+*.db3* filter=lfs diff=lfs merge=lfs -text
