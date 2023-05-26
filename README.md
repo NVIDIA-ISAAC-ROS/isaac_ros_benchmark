@@ -66,14 +66,22 @@ Follow the steps below to run a sample benchmark for measuring performance of an
 
     ```bash
     cd ~/workspaces/isaac_ros-dev/src &&
-    git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_benchmark && \
-    git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common && \
-    git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_nitros && \
-    git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_image_pipeline && \
-    git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_apriltag
+      git clone https://github.com/NVIDIA-ISAAC-ROS/ros2_benchmark && \
+      git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_benchmark && \
+      git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common && \
+      git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_nitros && \
+      git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_image_pipeline && \
+      git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_apriltag
     ```
 
-3. Pull down the r2b Dataset 2023 by following the instructions [here](https://github.com/NVIDIA-ISAAC-ROS/ros2_benchmark/blob/main/README.md#datasets).
+3. Pull down `r2b Dataset 2023` by following the instructions [here](https://github.com/NVIDIA-ISAAC-ROS/ros2_benchmark/blob/main/README.md#datasets) or fetch just the rosbag used in this Quickstart with the following command.
+
+    ```bash
+    mkdir -p ~/workspaces/isaac_ros-dev/src/ros2_benchmark/assets/datasets/r2b_dataset/r2b_storage && \
+      cd ~/workspaces/isaac_ros-dev/src/ros2_benchmark/assets/datasets/r2b_dataset/r2b_storage && \
+      wget --content-disposition 'https://api.ngc.nvidia.com/v2/resources/nvidia/isaac/r2bdataset2023/versions/1/files/r2b_storage/metadata.yaml' && \
+      wget --content-disposition 'https://api.ngc.nvidia.com/v2/resources/nvidia/isaac/r2bdataset2023/versions/1/files/r2b_storage/r2b_storage_0.db3'
+    ```
 
 4. Launch the Docker container using the `run_dev.sh` script:
 
