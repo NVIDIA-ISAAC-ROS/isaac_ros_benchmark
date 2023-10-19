@@ -52,8 +52,14 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='ESSDisparityNode',
         namespace=TestIsaacROSEss.generate_namespace(),
         package='isaac_ros_ess',
-        plugin='nvidia::isaac_ros::dnn_stereo_disparity::ESSDisparityNode',
-        parameters=[{'engine_file_path': ENGINE_FILE_PATH}]
+        plugin='nvidia::isaac_ros::dnn_stereo_depth::ESSDisparityNode',
+        parameters=[{'engine_file_path': ENGINE_FILE_PATH}],
+        remappings=[
+            ('left/camera_info', 'left/camera_info'),
+            ('left/image_rect', 'left/image_rect'),
+            ('right/camera_info', 'right/camera_info'),
+            ('right/image_rect', 'right/image_rect')
+        ]
     )
 
     data_loader_node = ComposableNode(
@@ -131,7 +137,7 @@ def generate_test_description():
             '-k', 'ess',
             '-t', 'fp16',
             '-e', ENGINE_FILE_PATH,
-            '-o', 'output_left', MODEL_FILE_PATH
+            '-o', 'output_left,output_conf', MODEL_FILE_PATH
         ]
         TaoConverter()(tao_converter_args)
     return TestIsaacROSEss.generate_test_description_with_nsys(launch_setup)

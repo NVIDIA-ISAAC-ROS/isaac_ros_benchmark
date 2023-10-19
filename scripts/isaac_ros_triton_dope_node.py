@@ -25,7 +25,7 @@ The graph consists of the following:
 
 Required:
 - Packages:
-    - isaac_ros_dnn_encoders
+    - isaac_ros_dnn_image_encoder
     - isaac_ros_triton
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_hope
@@ -43,11 +43,12 @@ from isaac_ros_benchmark import TRTConverter
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
-from ros2_benchmark import ImageResolution
 from ros2_benchmark import ROS2BenchmarkConfig, ROS2BenchmarkTest
+from ros2_benchmark import ImageResolution, Resolution
 
 PLAYBACK_BUFFER_SIZE = 50
-IMAGE_RESOLUTION = ImageResolution.VGA
+IMAGE_RESOLUTION = Resolution(1920, 1200)
+NETWORK_RESOLUTION = ImageResolution.VGA
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_hope'
 MODEL_NAME = 'ketchup'
 MODEL_CONFIG_FILE_NAME = 'ketchup/config.pbtxt'
@@ -55,6 +56,7 @@ MODEL_FILE_NAME = 'ketchup/ketchup.onnx'
 ENGINE_ROOT = '/tmp/models'
 ENGINE_FILE_DIR = '/tmp/models/ketchup'
 ENGINE_FILE_PATH = '/tmp/models/ketchup/1/model.plan'
+
 
 def launch_setup(container_prefix, container_sigterm_timeout):
     """Generate launch description with the Triton ROS 2 node for testing."""
@@ -90,11 +92,13 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     prep_encoder_node = ComposableNode(
         name='PrepDnnImageEncoderNode',
         namespace=TestIsaacROSTritonNode.generate_namespace(),
-        package='isaac_ros_dnn_encoders',
+        package='isaac_ros_dnn_image_encoder',
         plugin='nvidia::isaac_ros::dnn_inference::DnnImageEncoderNode',
         parameters=[{
-            'network_image_width': IMAGE_RESOLUTION['width'],
-            'network_image_height': IMAGE_RESOLUTION['height'],
+            'input_image_width': IMAGE_RESOLUTION['width'],
+            'input_image_height': IMAGE_RESOLUTION['height'],
+            'network_image_width': NETWORK_RESOLUTION['width'],
+            'network_image_height': NETWORK_RESOLUTION['height'],
             'network_image_encoding': 'rgb8',
             'image_mean': [0.5, 0.5, 0.5],
             'image_stddev': [0.5, 0.5, 0.5],
@@ -148,6 +152,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
 
     return [composable_node_container]
 
+
 def generate_test_description():
     MODELS_ROOT = os.path.join(TestIsaacROSTritonNode.get_assets_root_path(), 'models')
     if not os.path.exists(os.path.dirname(ENGINE_FILE_PATH)):
@@ -180,7 +185,10 @@ class TestIsaacROSTritonNode(ROS2BenchmarkTest):
         publisher_lower_frequency=10.0,
         # The number of frames to be buffered
         playback_message_buffer_size=PLAYBACK_BUFFER_SIZE,
-        custom_report_info={'data_resolution': IMAGE_RESOLUTION}
+        custom_report_info={
+            'data_resolution': IMAGE_RESOLUTION,
+            'network_resolution': NETWORK_RESOLUTION
+        }
     )
 
     # Amount of seconds to wait for Triton Engine to be initialized

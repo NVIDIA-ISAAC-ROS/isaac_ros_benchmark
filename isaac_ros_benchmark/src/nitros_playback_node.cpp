@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
-// Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+// http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,6 +28,7 @@
 #include "isaac_ros_nitros_camera_info_type/nitros_camera_info.hpp"
 #include "isaac_ros_nitros_compressed_image_type/nitros_compressed_image.hpp"
 #include "isaac_ros_nitros_detection2_d_array_type/nitros_detection2_d_array.hpp"
+#include "isaac_ros_nitros_detection3_d_array_type/nitros_detection3_d_array.hpp"
 #include "isaac_ros_nitros_disparity_image_type/nitros_disparity_image.hpp"
 #include "isaac_ros_nitros_flat_scan_type/nitros_flat_scan.hpp"
 #include "isaac_ros_nitros_image_type/nitros_image.hpp"
@@ -58,6 +59,7 @@ NitrosPlaybackNode::NitrosPlaybackNode(const rclcpp::NodeOptions & options)
     nvidia::isaac_ros::nitros::NitrosAprilTagDetectionArray>();
   nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosCameraInfo>();
   nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosDetection2DArray>();
+  nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosDetection3DArray>();
   nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosDisparityImage>();
   nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosFlatScan>();
   nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosImage>();

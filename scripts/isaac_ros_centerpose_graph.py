@@ -24,82 +24,98 @@ The graph consists of the following:
 - Graph under Test:
     1. DnnImageEncoderNode: turns raw images into resized, normalized tensors
     2. TensorRTNode: runs CenterPose model to estimate the 6DOF pose of target objects
-    3. CenterPoseDecoderNode:  turns tensors into marker arrays
+    3. CenterPoseDecoderNode:  turns tensors into 3d detections
 
 Required:
 - Packages:
-    - isaac_ros_dnn_encoders
+    - isaac_ros_dnn_image_encoder
     - isaac_ros_tensor_rt
     - isaac_ros_centerpose
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_storage
 - Models:
-    - assets/models/shoe_resnet_140.onnx
+    - assets/models/centerpose_shoe/centerpose_shoe.onnx
+    - assets/models/centerpose_shoe/config.pbtxt
 """
 
 import os
+import shutil
 import time
 
 from ament_index_python.packages import get_package_share_directory
 from isaac_ros_benchmark import TRTConverter
-from launch_ros.actions import ComposableNodeContainer, Node
+from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
-from ros2_benchmark import Resolution
 from ros2_benchmark import ROS2BenchmarkConfig, ROS2BenchmarkTest
+from ros2_benchmark import Resolution
 
-IMAGE_RESOLUTION = Resolution(512, 512)
+IMAGE_RESOLUTION = Resolution(1920, 1200)
+NETWORK_RESOLUTION = Resolution(512, 512)
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_storage'
-MODEL_FILE_NAME = 'shoe_resnet_140.onnx'
-ENGINE_FILE_PATH = '/tmp/shoe_resnet_140_engine.plan'
+MODEL_NAME = 'centerpose_shoe'
+MODEL_CONFIG_FILE_NAME = 'centerpose_shoe/config.pbtxt'
+ENGINE_ROOT = '/tmp/models'
+ENGINE_FILE_DIR = '/tmp/models/centerpose_shoe'
+ENGINE_FILE_PATH = '/tmp/models/centerpose_shoe/1/model.plan'
+
 
 def launch_setup(container_prefix, container_sigterm_timeout):
     """Generate launch description for Isaac ROS Pose Estimation (CenterPose)."""
-
-    config = os.path.join(
-        get_package_share_directory('isaac_ros_benchmark'),
-        'config',
-        'centerpose_decoder_params.yaml'
-    )
+    MODELS_ROOT = os.path.join(TestIsaacROSCenterPose.get_assets_root_path(), 'models')
 
     centerpose_encoder_node = ComposableNode(
         name='DnnImageEncoderNode',
         namespace=TestIsaacROSCenterPose.generate_namespace(),
-        package='isaac_ros_dnn_encoders',
+        package='isaac_ros_dnn_image_encoder',
         plugin='nvidia::isaac_ros::dnn_inference::DnnImageEncoderNode',
         parameters=[{
-            'network_image_width': IMAGE_RESOLUTION['width'],
-            'network_image_height': IMAGE_RESOLUTION['height'],
+            'input_image_width': IMAGE_RESOLUTION['width'],
+            'input_image_height': IMAGE_RESOLUTION['height'],
+            'network_image_width': NETWORK_RESOLUTION['width'],
+            'network_image_height': NETWORK_RESOLUTION['height'],
             'image_mean': [0.408, 0.447, 0.47],
             'image_stddev': [0.289, 0.274, 0.278]
         }],
         remappings=[('encoded_tensor', 'tensor_pub')])
 
     centerpose_inference_node = ComposableNode(
-        name='TensorRTNode',
+        name='TritonNode',
         namespace=TestIsaacROSCenterPose.generate_namespace(),
-        package='isaac_ros_tensor_rt',
-        plugin='nvidia::isaac_ros::dnn_inference::TensorRTNode',
+        package='isaac_ros_triton',
+        plugin='nvidia::isaac_ros::dnn_inference::TritonNode',
         parameters=[{
-            'engine_file_path': ENGINE_FILE_PATH,
+            'model_name': MODEL_NAME,
+            'model_repository_paths': [ENGINE_ROOT],
             'input_tensor_names': ['input_tensor'],
             'input_binding_names': ['input'],
             'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
-            'output_tensor_names': ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset', 'scale'],
-            'output_binding_names': ['hm', 'wh', 'hps', 'reg', 'hm_hp', 'hp_offset', 'scale'],
+            'output_tensor_names': ['bboxes', 'scores', 'kps', 'clses',
+                                    'obj_scale', 'kps_displacement_mean',
+                                    'kps_heatmap_mean'],
+            'output_binding_names': ['bboxes', 'scores', 'kps', 'clses',
+                                     'obj_scale', 'kps_displacement_mean',
+                                     'kps_heatmap_mean'],
             'output_tensor_formats': ['nitros_tensor_list_nhwc_rgb_f32'],
-            'verbose': False,
-            'force_engine_update': False,
         }])
 
-    centerpose_decoder_node = Node(
+    centerpose_decoder_node = ComposableNode(
             name='CenterPoseDecoderNode',
             namespace=TestIsaacROSCenterPose.generate_namespace(),
             package='isaac_ros_centerpose',
-            executable='CenterPoseDecoder',
-            parameters=[config],
-            remappings=[('object_poses', 'poses')],
-            output='screen'
+            plugin='nvidia::isaac_ros::centerpose::CenterPoseDecoderNode',
+            parameters=[{
+                'camera_matrix': [
+                    651.2994384765625, 0.0, 298.3225504557292,
+                    0.0, 651.2994384765625, 392.1635182698568,
+                    0.0, 0.0, 1.0],
+                'original_image_size': [600, 800],
+                'output_field_size': [128, 128],
+                'cuboid_scaling_factor': 1.0,
+                'score_threshold': 0.3,
+                'object_name': 'shoe',
+            }],
+            remappings=[('centerpose/detections', 'poses')],
     )
 
     data_loader_node = ComposableNode(
@@ -107,7 +123,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         namespace=TestIsaacROSCenterPose.generate_namespace(),
         package='ros2_benchmark',
         plugin='ros2_benchmark::DataLoaderNode',
-        remappings=[('hawk_0_left_rgb_image', 'data_loader/image')]
+        remappings=[('hawk_0_left_rgb_image', 'data_loader/image'),
+                    ('hawk_0_left_rgb_camera_info', 'data_loader/camera_info')]
     )
 
     playback_node = ComposableNode(
@@ -116,10 +133,13 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         package='isaac_ros_benchmark',
         plugin='isaac_ros_benchmark::NitrosPlaybackNode',
         parameters=[{
-            'data_formats': ['sensor_msgs/msg/Image'],
+            'data_formats': ['sensor_msgs/msg/Image',
+                             'sensor_msgs/msg/CameraInfo'],
         }],
         remappings=[('buffer/input0', 'data_loader/image'),
-                    ('input0', 'image')]
+                    ('input0', 'image'),
+                    ('buffer/input1', 'data_loader/camera_info'),
+                    ('input1', 'camera_info')],
     )
 
     monitor_node = ComposableNode(
@@ -128,14 +148,15 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         package='isaac_ros_benchmark',
         plugin='isaac_ros_benchmark::NitrosMonitorNode',
         parameters=[{
-            'monitor_data_format': 'visualization_msgs/msg/MarkerArray',
+            'monitor_data_format': 'nitros_detection3_d_array',
+            'use_nitros_type_monitor_sub': True,
         }],
         remappings=[
             ('output', 'poses')],
     )
 
     composable_node_container = ComposableNodeContainer(
-        name='dope_container',
+        name='centerpose_container',
         package='rclcpp_components',
         executable='component_container_mt',
         prefix=container_prefix,
@@ -145,25 +166,32 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             playback_node,
             monitor_node,
             centerpose_encoder_node,
-            centerpose_inference_node
+            centerpose_inference_node,
+            centerpose_decoder_node,
         ],
         namespace=TestIsaacROSCenterPose.generate_namespace(),
         output='screen',
     )
 
-    return [composable_node_container, centerpose_decoder_node]
+    return [composable_node_container]
+
 
 def generate_test_description():
     MODELS_ROOT = os.path.join(TestIsaacROSCenterPose.get_assets_root_path(), 'models')
-    MODEL_FILE_PATH = os.path.join(MODELS_ROOT, MODEL_FILE_NAME)
+    if not os.path.exists(os.path.dirname(ENGINE_FILE_PATH)):
+        os.makedirs(os.path.dirname(ENGINE_FILE_PATH))
+    shutil.copy(
+        os.path.join(MODELS_ROOT, MODEL_CONFIG_FILE_NAME),
+        ENGINE_FILE_DIR)
 
     # Generate engine file using trt-converter
     if not os.path.isfile(ENGINE_FILE_PATH):
-        trt_converter_args = [
-            f'--onnx={MODEL_FILE_PATH}',
-            f'--saveEngine={ENGINE_FILE_PATH}'
-        ]
-        TRTConverter()(trt_converter_args)
+       trt_converter_args = [
+           f'--onnx={MODELS_ROOT}/{MODEL_NAME}/centerpose_shoe.onnx',
+           f'--saveEngine={ENGINE_FILE_PATH}',
+           '--fp16'
+       ]
+       TRTConverter()(trt_converter_args)
 
     return TestIsaacROSCenterPose.generate_test_description_with_nsys(launch_setup)
 
@@ -183,7 +211,10 @@ class TestIsaacROSCenterPose(ROS2BenchmarkTest):
         publisher_lower_frequency=10.0,
         # The number of frames to be buffered
         playback_message_buffer_size=1,
-        custom_report_info={'data_resolution': IMAGE_RESOLUTION}
+        custom_report_info={
+            'data_resolution': IMAGE_RESOLUTION,
+            'network_resolution': NETWORK_RESOLUTION
+        }
     )
 
     # Amount of seconds to wait for TensorRT Engine to be initialized

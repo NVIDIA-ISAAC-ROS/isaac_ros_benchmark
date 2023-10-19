@@ -1,1 +1,47 @@
-{"mesh": {"BasicPerformanceMetrics.RECEIVED_DURATION": 47216.435302734375, "BasicPerformanceMetrics.MEAN_PLAYBACK_FRAME_RATE": 103.45282212866643, "BasicPerformanceMetrics.MEAN_FRAME_RATE": 0.8259835743623248, "BasicPerformanceMetrics.NUM_MISSED_FRAMES": 861, "BasicPerformanceMetrics.NUM_FRAMES_SENT": 900, "BasicPerformanceMetrics.FIRST_SENT_RECEIVED_LATENCY": -38546.843017578125, "BasicPerformanceMetrics.LAST_SENT_RECEIVED_LATENCY": -30.025390625, "BasicPerformanceMetrics.MAX_JITTER": 38420.30126953125, "BasicPerformanceMetrics.MIN_JITTER": 0.037841796875, "BasicPerformanceMetrics.MEAN_JITTER": 1089.742820945946, "BasicPerformanceMetrics.STD_DEV_JITTER": 6222.290505576477}, "map_slice": {"BasicPerformanceMetrics.RECEIVED_DURATION": 8479.12841796875, "BasicPerformanceMetrics.MEAN_PLAYBACK_FRAME_RATE": 103.45282212866643, "BasicPerformanceMetrics.MEAN_FRAME_RATE": 2.1228596988641972, "BasicPerformanceMetrics.NUM_MISSED_FRAMES": 882, "BasicPerformanceMetrics.NUM_FRAMES_SENT": 900, "BasicPerformanceMetrics.FIRST_SENT_RECEIVED_LATENCY": 277.9560546875, "BasicPerformanceMetrics.LAST_SENT_RECEIVED_LATENCY": 57.466796875, "BasicPerformanceMetrics.MAX_JITTER": 17.83251953125, "BasicPerformanceMetrics.MIN_JITTER": 0.307861328125, "BasicPerformanceMetrics.MEAN_JITTER": 2.731231689453125, "BasicPerformanceMetrics.STD_DEV_JITTER": 4.030705120236899}, "CPUProfilingMetrics.MAX_CPU_UTIL": 6.0125, "CPUProfilingMetrics.MIN_CPU_UTIL": 0.125, "CPUProfilingMetrics.MEAN_CPU_UTIL": 1.907083333333333, "CPUProfilingMetrics.STD_DEV_CPU_UTIL": 1.512653860401939, "CPUProfilingMetrics.BASELINE_CPU_UTIL": 3.75, "metadata": {"BenchmarkMetadata.NAME": "Isaac ROS NvbloxNode Benchmark", "BenchmarkMetadata.TEST_FILE_PATH": "/workspaces/isaac_ros-dev/ros_ws/src/isaac_ros_benchmark/scripts/isaac_ros_nvblox_node.py", "BenchmarkMetadata.TEST_DATETIME": "2023-05-25T07:45:35Z", "BenchmarkMetadata.DEVICE_HOSTNAME": "ros-vfzjyxd3qzdwbmuoz7r7mkv6te", "BenchmarkMetadata.DEVICE_ARCH": "aarch64", "BenchmarkMetadata.DEVICE_OS": "Linux 5.10.104-tegra #1 SMP PREEMPT Wed Mar 15 00:17:07 PDT 2023", "BenchmarkMetadata.IDLE_CPU_UTIL": 0.5, "BenchmarkMetadata.BENCHMARK_MODE": 0, "BenchmarkMetadata.INPUT_DATA_PATH": "/workspaces/isaac_ros-dev/ros_ws/src/ros2_benchmark/assets/datasets/r2b_dataset/r2b_hideaway", "BenchmarkMetadata.INPUT_DATA_SIZE": 1913946112, "BenchmarkMetadata.INPUT_DATA_HASH": "96a3c2b8007173f9da57e848b4fcee8c", "BenchmarkMetadata.CONFIG": "ros2_benchmark_config:\n  additional_fixed_publisher_rate_tests:\n  - 10.0\n  - 30.0\n  - 60.0\n  assets_root: /workspaces/isaac_ros-dev/ros_ws/src/ros2_benchmark/assets\n  benchmark_duration: 5.0\n  benchmark_mode: BenchmarkMode.TIMELINE\n  benchmark_name: Isaac ROS NvbloxNode Benchmark\n  benchmark_namespace: r2b\n  binary_search_acceptable_frame_loss_fraction: 0.05\n  binary_search_acceptable_frame_rate_drop: 10.0\n  binary_search_duration_fraction: 1.0\n  binary_search_terminal_interval_width: 10.0\n  cpu_profiling_interval_sec: 1.0\n  custom_report_info: {}\n  default_config_version: 0.30.0\n  default_service_future_timeout_sec: 35.0\n  enable_cpu_profiler: true\n  enable_trial_buffer_preparation: true\n  enforce_publisher_rate: false\n  input_data_end_time: -1.0\n  input_data_path: datasets/r2b_dataset/r2b_hideaway\n  input_data_start_time: -1.0\n  linear_scan_acceptable_frame_loss_fraction: 0.05\n  linear_scan_acceptable_frame_rate_drop: 5.0\n  linear_scan_duration_fraction: 1.0\n  linear_scan_step_size: 5.0\n  load_data_in_real_time: true\n  log_file_name: kpi.json\n  log_folder: /osmo/data/output\n  monitor_info_list:\n  - calculators:\n    - class_name: BasicPerformanceCalculator\n      config:\n        report_prefix: mesh\n      module_name: ros2_benchmark.basic_performance_calculator\n    service_name: start_monitoring0\n  - calculators:\n    - class_name: BasicPerformanceCalculator\n      config:\n        report_prefix: map_slice\n      module_name: ros2_benchmark.basic_performance_calculator\n    service_name: start_monitoring1\n  play_messages_service_future_timeout_sec: 25.0\n  playback_message_buffer_size: 0\n  publish_tf_messages_in_set_data: false\n  publish_tf_static_messages_in_set_data: true\n  publisher_lower_frequency: 10.0\n  publisher_upper_frequency: 100.0\n  record_data_timeline: true\n  revise_timestamps_as_message_ids: false\n  set_data_service_future_timeout_sec: 60.0\n  setup_service_client_timeout_sec: 20.0\n  start_monitoring_service_timeout_sec: 30\n  start_recording_service_future_timeout_sec: 25.0\n  start_recording_service_timeout_sec: 20\n  test_iterations: 5\n"}}
+{
+    "mesh": {
+        "BasicPerformanceMetrics.RECEIVED_DURATION": 60419.981201171875,
+        "BasicPerformanceMetrics.MEAN_PLAYBACK_FRAME_RATE": 104.9840302612822,
+        "BasicPerformanceMetrics.MEAN_FRAME_RATE": 0.7447867262680844,
+        "BasicPerformanceMetrics.NUM_MISSED_FRAMES": 855,
+        "BasicPerformanceMetrics.NUM_FRAMES_SENT": 900,
+        "BasicPerformanceMetrics.FIRST_SENT_RECEIVED_LATENCY": -51672.523681640625,
+        "BasicPerformanceMetrics.LAST_SENT_RECEIVED_LATENCY": 174.72509765625,
+        "BasicPerformanceMetrics.MAX_JITTER": 51621.49560546875,
+        "BasicPerformanceMetrics.MIN_JITTER": 0.019775390625,
+        "BasicPerformanceMetrics.MEAN_JITTER": 1207.5356274981832,
+        "BasicPerformanceMetrics.STD_DEV_JITTER": 7779.047357579208
+    },
+    "static_map_slice": {
+        "BasicPerformanceMetrics.RECEIVED_DURATION": 80996.24560546875,
+        "BasicPerformanceMetrics.MEAN_PLAYBACK_FRAME_RATE": 104.9840302612822,
+        "BasicPerformanceMetrics.MEAN_FRAME_RATE": 2.012438956664363,
+        "BasicPerformanceMetrics.NUM_MISSED_FRAMES": 737,
+        "BasicPerformanceMetrics.NUM_FRAMES_SENT": 900,
+        "BasicPerformanceMetrics.FIRST_SENT_RECEIVED_LATENCY": -51366.047119140625,
+        "BasicPerformanceMetrics.LAST_SENT_RECEIVED_LATENCY": 21057.466064453125,
+        "BasicPerformanceMetrics.MAX_JITTER": 11.060546875,
+        "BasicPerformanceMetrics.MIN_JITTER": 0.000732421875,
+        "BasicPerformanceMetrics.MEAN_JITTER": 0.6828855905473602,
+        "BasicPerformanceMetrics.STD_DEV_JITTER": 1.549340389915465
+    },
+    "CPUProfilingMetrics.MAX_CPU_UTIL": 3.8875,
+    "CPUProfilingMetrics.MIN_CPU_UTIL": 0.0,
+    "CPUProfilingMetrics.MEAN_CPU_UTIL": 1.8575000000000002,
+    "CPUProfilingMetrics.STD_DEV_CPU_UTIL": 1.2115743889666866,
+    "CPUProfilingMetrics.BASELINE_CPU_UTIL": 3.8875,
+    "metadata": {
+        "BenchmarkMetadata.NAME": "Isaac ROS NvbloxNode Benchmark",
+        "BenchmarkMetadata.TEST_FILE_PATH": "/workspaces/isaac_ros-dev/ros_ws/src/isaac_ros_benchmark/scripts/isaac_ros_nvblox_node.py",
+        "BenchmarkMetadata.TEST_DATETIME": "2023-10-17T07:38:53Z",
+        "BenchmarkMetadata.DEVICE_HOSTNAME": "ros-nfzxn4azjfgknnkkay5jmyo5tu",
+        "BenchmarkMetadata.DEVICE_ARCH": "aarch64",
+        "BenchmarkMetadata.DEVICE_OS": "Linux 5.10.120-tegra #1 SMP PREEMPT Tue Aug 1 12:32:50 PDT 2023",
+        "BenchmarkMetadata.IDLE_CPU_UTIL": 0.625,
+        "BenchmarkMetadata.BENCHMARK_MODE": 0,
+        "BenchmarkMetadata.INPUT_DATA_PATH": "/workspaces/isaac_ros-dev/ros_ws/src/ros2_benchmark/assets/datasets/r2b_dataset/r2b_hideaway",
+        "BenchmarkMetadata.INPUT_DATA_SIZE": 1913946112,
+        "BenchmarkMetadata.INPUT_DATA_HASH": "96a3c2b8007173f9da57e848b4fcee8c",
+        "BenchmarkMetadata.CONFIG": "ros2_benchmark_config:\n  additional_fixed_publisher_rate_tests:\n  - 10.0\n  - 30.0\n  - 60.0\n  assets_root: /workspaces/isaac_ros-dev/ros_ws/src/ros2_benchmark/assets\n  benchmark_duration: 5.0\n  benchmark_mode: BenchmarkMode.TIMELINE\n  benchmark_name: Isaac ROS NvbloxNode Benchmark\n  benchmark_namespace: r2b\n  binary_search_acceptable_frame_loss_fraction: 0.05\n  binary_search_acceptable_frame_rate_drop: 10.0\n  binary_search_duration_fraction: 1.0\n  binary_search_terminal_interval_width: 10.0\n  cpu_profiling_interval_sec: 1.0\n  custom_report_info: {}\n  default_config_version: 0.30.0\n  default_service_future_timeout_sec: 35.0\n  enable_cpu_profiler: true\n  enable_trial_buffer_preparation: true\n  enforce_publisher_rate: false\n  input_data_end_time: -1.0\n  input_data_path: datasets/r2b_dataset/r2b_hideaway\n  input_data_start_time: -1.0\n  linear_scan_acceptable_frame_loss_fraction: 0.05\n  linear_scan_acceptable_frame_rate_drop: 5.0\n  linear_scan_duration_fraction: 1.0\n  linear_scan_step_size: 5.0\n  load_data_in_real_time: true\n  log_file_name: kpi.json\n  log_folder: /osmo/data/output\n  monitor_info_list:\n  - calculators:\n    - class_name: BasicPerformanceCalculator\n      config:\n        report_prefix: mesh\n      module_name: ros2_benchmark.basic_performance_calculator\n    service_name: start_monitoring0\n  - calculators:\n    - class_name: BasicPerformanceCalculator\n      config:\n        report_prefix: static_map_slice\n      module_name: ros2_benchmark.basic_performance_calculator\n    service_name: start_monitoring1\n  play_messages_service_future_timeout_sec: 25.0\n  playback_message_buffer_size: 0\n  publish_tf_messages_in_set_data: false\n  publish_tf_static_messages_in_set_data: true\n  publisher_lower_frequency: 10.0\n  publisher_upper_frequency: 100.0\n  record_data_timeline: true\n  revise_timestamps_as_message_ids: false\n  ros1_ws: /workspaces/isaac_ros-dev/isaac_ros_1-dev\n  set_data_service_future_timeout_sec: 60.0\n  setup_service_client_timeout_sec: 20.0\n  start_monitoring_service_timeout_sec: 30\n  start_recording_service_future_timeout_sec: 25.0\n  start_recording_service_timeout_sec: 20\n  test_iterations: 5\n"
+    }
+}
