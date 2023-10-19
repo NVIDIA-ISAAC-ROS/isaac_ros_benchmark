@@ -28,7 +28,7 @@ The graph consists of the following:
 
 Required:
 - Packages:
-    - isaac_ros_dnn_encoders
+    - isaac_ros_dnn_image_encoder
     - isaac_ros_triton
     - isaac_ros_detectnet
 - Datasets:
@@ -48,10 +48,11 @@ from isaac_ros_benchmark import TaoConverter
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
-from ros2_benchmark import Resolution
 from ros2_benchmark import ROS2BenchmarkConfig, ROS2BenchmarkTest
+from ros2_benchmark import Resolution
 
-IMAGE_RESOLUTION = Resolution(960, 544)
+IMAGE_RESOLUTION = Resolution(1920, 1200)
+NETWORK_RESOLUTION = Resolution(960, 544)
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_hallway'
 MODEL_NAME = 'peoplenet'
 MODEL_CONFIG_FILE_NAME = 'peoplenet/config.pbtxt'
@@ -59,9 +60,9 @@ ENGINE_ROOT = '/tmp/models'
 ENGINE_FILE_DIR = '/tmp/models/peoplenet'
 ENGINE_FILE_PATH = '/tmp/models/peoplenet/1/model.plan'
 
+
 def launch_setup(container_prefix, container_sigterm_timeout):
     """Generate launch description for Isaac ROS DetectNet graph."""
-
     # Read labels from text file
     MODELS_ROOT = os.path.join(TesetIsaacROSDetectNet.get_assets_root_path(), 'models')
     LABELS_FILE_PATH = os.path.join(MODELS_ROOT, MODEL_NAME, 'labels.txt')
@@ -71,11 +72,13 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     encoder_node = ComposableNode(
         name='DnnImageEncoderNode',
         namespace=TesetIsaacROSDetectNet.generate_namespace(),
-        package='isaac_ros_dnn_encoders',
+        package='isaac_ros_dnn_image_encoder',
         plugin='nvidia::isaac_ros::dnn_inference::DnnImageEncoderNode',
         parameters=[{
-            'network_image_width': IMAGE_RESOLUTION['width'],
-            'network_image_height': IMAGE_RESOLUTION['height']
+            'input_image_width': IMAGE_RESOLUTION['width'],
+            'input_image_height': IMAGE_RESOLUTION['height'],
+            'network_image_width': NETWORK_RESOLUTION['width'],
+            'network_image_height': NETWORK_RESOLUTION['height']
         }],
         remappings=[('encoded_tensor', 'tensor_pub')]
     )
@@ -173,6 +176,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
 
     return [composable_node_container]
 
+
 def generate_test_description():
     MODELS_ROOT = os.path.join(TesetIsaacROSDetectNet.get_assets_root_path(), 'models')
     if not os.path.exists(os.path.dirname(ENGINE_FILE_PATH)):
@@ -209,7 +213,10 @@ class TesetIsaacROSDetectNet(ROS2BenchmarkTest):
         publisher_lower_frequency=10.0,
         # The number of frames to be buffered
         playback_message_buffer_size=1,
-        custom_report_info={'data_resolution': IMAGE_RESOLUTION}
+        custom_report_info={
+            'data_resolution': IMAGE_RESOLUTION,
+            'network_resolution': NETWORK_RESOLUTION
+        }
     )
 
     # Amount of seconds to wait for DetectNet to be initialized

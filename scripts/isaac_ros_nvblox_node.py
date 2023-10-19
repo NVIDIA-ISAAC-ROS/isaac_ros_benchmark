@@ -99,7 +99,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='VisualSlamNode',
         namespace=TestIsaacROSNvbloxNode.generate_namespace(),
         package='isaac_ros_visual_slam',
-        plugin='isaac_ros::visual_slam::VisualSlamNode',
+        plugin='nvidia::isaac_ros::visual_slam::VisualSlamNode',
         remappings=[('stereo_camera/left/image', 'hawk_0_left_rgb_image'),
                     ('stereo_camera/left/camera_info', 'hawk_0_left_rgb_camera_info'),
                     ('stereo_camera/right/image', 'hawk_0_right_rgb_image'),
@@ -164,7 +164,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'monitor_index': 1,
         }],
         remappings=[
-            ('output', 'NvbloxNode/map_slice')
+            ('output', 'NvbloxNode/static_map_slice')
         ],
     )
 
@@ -222,7 +222,7 @@ class TestIsaacROSNvbloxNode(ROS2BenchmarkTest):
                 [BasicPerformanceCalculator({'report_prefix': 'mesh'})]),
             MonitorPerformanceCalculatorsInfo(
                 'start_monitoring1',
-                [BasicPerformanceCalculator({'report_prefix': 'map_slice'})])
+                [BasicPerformanceCalculator({'report_prefix': 'static_map_slice'})])
         ]
     )
 

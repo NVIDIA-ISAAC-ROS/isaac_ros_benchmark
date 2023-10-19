@@ -51,7 +51,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         parameters=[{
                 'input_width': IMAGE_RESOLUTION['width'],
                 'input_height': IMAGE_RESOLUTION['height'],
-                'config': 'iframe',
+                'config': 'iframe_cqp',
         }])
 
     data_loader_node = ComposableNode(

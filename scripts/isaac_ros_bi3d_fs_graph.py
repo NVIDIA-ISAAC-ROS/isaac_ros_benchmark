@@ -21,8 +21,8 @@ The graph consists of the following:
 - Preprocessors:
     1. PrepLeftResizeNode, PrepRightResizeNode: resizes images to 960 x 576
 - Graph under Test:
-    1. Bi3DNode: creates proximity segmentation disparity image from stereo pair
-    2. FreespaceSegmentationNode: creates occupancy grid from proximity segmentation disparity image
+    1. Bi3DNode: creates depth segmentation disparity image from stereo pair
+    2. FreespaceSegmentationNode: creates occupancy grid from depth segmentation disparity image
 
 Required:
 - Packages:
@@ -162,9 +162,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                     ('buffer/input1', 'buffer/right/image_rect'),
                     ('input1', 'right_image_bi3d'),
                     ('buffer/input2', 'buffer/left/camera_info'),
-                    ('input2', 'left/camera_info'),
+                    ('input2', 'left_camera_info_bi3d'),
                     ('buffer/input3', 'buffer/right/camera_info'),
-                    ('input3', 'right/camera_info')]
+                    ('input3', 'right_camera_info_bi3d')]
     )
 
     monitor_node = ComposableNode(

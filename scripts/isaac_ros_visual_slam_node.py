@@ -43,7 +43,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='VisualSlamNode',
         namespace=TestIsaacROSVisualSlamNode.generate_namespace(),
         package='isaac_ros_visual_slam',
-        plugin='isaac_ros::visual_slam::VisualSlamNode',
+        plugin='nvidia::isaac_ros::visual_slam::VisualSlamNode',
         remappings=[('stereo_camera/left/image', 'image_left'),
                     ('stereo_camera/left/camera_info', 'camera_info_left'),
                     ('stereo_camera/right/image', 'image_right'),

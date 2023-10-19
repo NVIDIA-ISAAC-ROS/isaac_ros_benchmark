@@ -25,30 +25,33 @@ The graph consists of the following:
 
 Required:
 - Packages:
-    - isaac_ros_dnn_encoders
+    - isaac_ros_dnn_image_encoder
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_hallway
 """
 
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
-
 from ros2_benchmark import ROS2BenchmarkConfig, ROS2BenchmarkTest
+from ros2_benchmark import Resolution
 
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_hallway'
-INPUT_TENSOR_DIMENSIONS = [1, 3, 1920, 1080]
+IMAGE_RESOLUTION = Resolution(1920, 1200)
+INPUT_TENSOR_DIMENSIONS = [1, 3, IMAGE_RESOLUTION['width'], IMAGE_RESOLUTION['height']]
+
 
 def launch_setup(container_prefix, container_sigterm_timeout):
     """Generate launch description for benchmarking Isaac ROS DnnImageEncoderNode."""
-
     encoder_node = ComposableNode(
         name='DnnImageEncoderNode',
         namespace=TestIsaacROSDnnImageEncoderNode.generate_namespace(),
-        package='isaac_ros_dnn_encoders',
+        package='isaac_ros_dnn_image_encoder',
         plugin='nvidia::isaac_ros::dnn_inference::DnnImageEncoderNode',
         parameters=[{
             # If updated image dimensions and encoding, please also update performance
             # metrics values at end of benchmark
+            'input_image_width': IMAGE_RESOLUTION['width'],
+            'input_image_height': IMAGE_RESOLUTION['height'],
             'network_image_width': 640,
             'network_image_height': 480,
             'network_image_encoding': 'rgb8',
@@ -106,6 +109,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     )
 
     return [composable_node_container]
+
 
 def generate_test_description():
     return TestIsaacROSDnnImageEncoderNode.generate_test_description_with_nsys(launch_setup)

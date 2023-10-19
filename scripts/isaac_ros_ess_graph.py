@@ -21,8 +21,9 @@ The graph consists of the following:
 - Preprocessors:
     None
 - Graph under Test:
-    1. ESSDisparityNode: creates disparity images from stereo pair
-    2. PointCloudNode: converts disparity to pointcloud
+    1. LeftResizeNode, RightResizeNode: resizes images to 960 x 576
+    2. ESSDisparityNode: creates disparity images from stereo pair
+    3. PointCloudNode: converts disparity to pointcloud
 
 Required:
 - Packages:
@@ -46,6 +47,8 @@ from ros2_benchmark import ROS2BenchmarkConfig, ROS2BenchmarkTest
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_hideaway'
 MODEL_FILE_NAME = 'ess/ess.etlt'
 ENGINE_FILE_PATH = '/tmp/ess.engine'
+NETWORK_WIDTH = 960
+NETWORK_HEIGHT = 576
 
 def launch_setup(container_prefix, container_sigterm_timeout):
     """Generate launch description for benchmarking Isaac ROS ESS graph."""
@@ -54,8 +57,48 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='ESSDisparityNode',
         namespace=TestIsaacROSEssStereoGraph.generate_namespace(),
         package='isaac_ros_ess',
-        plugin='nvidia::isaac_ros::dnn_stereo_disparity::ESSDisparityNode',
-        parameters=[{'engine_file_path': ENGINE_FILE_PATH}]
+        plugin='nvidia::isaac_ros::dnn_stereo_depth::ESSDisparityNode',
+        parameters=[{'engine_file_path': ENGINE_FILE_PATH}],
+        remappings=[
+            ('left/camera_info', 'left/camera_info_resize'),
+            ('left/image_rect', 'left/image_rect_resize'),
+            ('right/camera_info', 'right/camera_info_resize'),
+            ('right/image_rect', 'right/image_rect_resize')
+        ]
+    )
+
+    image_resize_node_left = ComposableNode(
+        name='LeftResizeNode',
+        namespace=TestIsaacROSEssStereoGraph.generate_namespace(),
+        package='isaac_ros_image_proc',
+        plugin='nvidia::isaac_ros::image_proc::ResizeNode',
+        parameters=[{
+                'output_width': NETWORK_WIDTH,
+                'output_height': NETWORK_HEIGHT,
+                'keep_aspect_ratio': True
+        }],
+        remappings=[
+            ('camera_info', 'left/camera_info'),
+            ('image', 'left/image_rect'),
+            ('resize/camera_info', 'left/camera_info_resize'),
+            ('resize/image', 'left/image_rect_resize')]
+    )
+
+    image_resize_node_right = ComposableNode(
+        name='RightResizeNode',
+        namespace=TestIsaacROSEssStereoGraph.generate_namespace(),
+        package='isaac_ros_image_proc',
+        plugin='nvidia::isaac_ros::image_proc::ResizeNode',
+        parameters=[{
+                'output_width': NETWORK_WIDTH,
+                'output_height': NETWORK_HEIGHT,
+                'keep_aspect_ratio': True
+        }],
+        remappings=[
+            ('camera_info', 'right/camera_info'),
+            ('image', 'right/image_rect'),
+            ('resize/camera_info', 'right/camera_info_resize'),
+            ('resize/image', 'right/image_rect_resize')]
     )
 
     pointcloud_node = ComposableNode(
@@ -68,7 +111,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                 'use_color': False,
                 'use_system_default_qos': True,
         }],
-        remappings=[('left/image_rect_color', 'left/image_rect')])
+        remappings=[('left/image_rect_color', 'left/image_rect_resize')])
 
     data_loader_node = ComposableNode(
         name='DataLoaderNode',
@@ -129,7 +172,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             playback_node,
             monitor_node,
             disparity_node,
-            pointcloud_node
+            pointcloud_node,
+            image_resize_node_left,
+            image_resize_node_right
         ],
         output='screen',
     )
@@ -146,7 +191,7 @@ def generate_test_description():
             '-k', 'ess',
             '-t', 'fp16',
             '-e', ENGINE_FILE_PATH,
-            '-o', 'output_left', MODEL_FILE_PATH
+            '-o', 'output_left,output_conf', MODEL_FILE_PATH
         ]
         TaoConverter()(tao_converter_args)
     return TestIsaacROSEssStereoGraph.generate_test_description_with_nsys(launch_setup)

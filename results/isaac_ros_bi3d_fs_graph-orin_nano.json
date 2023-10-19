@@ -1,1 +1,54 @@
-{"BasicPerformanceMetrics.RECEIVED_DURATION": 4903.953776041667, "BasicPerformanceMetrics.MEAN_PLAYBACK_FRAME_RATE": 24.264685700465165, "BasicPerformanceMetrics.MEAN_FRAME_RATE": 23.630702613783868, "BasicPerformanceMetrics.NUM_MISSED_FRAMES": 4.333333333333333, "BasicPerformanceMetrics.NUM_FRAMES_SENT": 120.0, "BasicPerformanceMetrics.FIRST_SENT_RECEIVED_LATENCY": 135.737060546875, "BasicPerformanceMetrics.LAST_SENT_RECEIVED_LATENCY": 94.35603841145833, "BasicPerformanceMetrics.MAX_JITTER": 203.509521484375, "BasicPerformanceMetrics.MIN_JITTER": 0.09716796875, "BasicPerformanceMetrics.MEAN_JITTER": 68.05407820991847, "BasicPerformanceMetrics.STD_DEV_JITTER": 48.51095273151535, "CPUProfilingMetrics.MAX_CPU_UTIL": 29.083333333333332, "CPUProfilingMetrics.MIN_CPU_UTIL": 2.35, "CPUProfilingMetrics.MEAN_CPU_UTIL": 14.101767676767677, "CPUProfilingMetrics.STD_DEV_CPU_UTIL": 10.513104006853075, "CPUProfilingMetrics.BASELINE_CPU_UTIL": 23.26111111111111, "10.0fps": {"BasicPerformanceMetrics.RECEIVED_DURATION": 4896.2490234375, "BasicPerformanceMetrics.MEAN_PLAYBACK_FRAME_RATE": 10.204051127876491, "BasicPerformanceMetrics.MEAN_FRAME_RATE": 10.211898896616292, "BasicPerformanceMetrics.NUM_MISSED_FRAMES": 0, "BasicPerformanceMetrics.NUM_FRAMES_SENT": 50, "BasicPerformanceMetrics.FIRST_SENT_RECEIVED_LATENCY": 61.293701171875, "BasicPerformanceMetrics.LAST_SENT_RECEIVED_LATENCY": 57.528076171875, "BasicPerformanceMetrics.MAX_JITTER": 10.650390625, "BasicPerformanceMetrics.MIN_JITTER": 0.035888671875, "BasicPerformanceMetrics.MEAN_JITTER": 4.938364664713542, "BasicPerformanceMetrics.STD_DEV_JITTER": 3.2498413980885066, "CPUProfilingMetrics.MAX_CPU_UTIL": 12.633333333333333, "CPUProfilingMetrics.MIN_CPU_UTIL": 9.983333333333334, "CPUProfilingMetrics.MEAN_CPU_UTIL": 11.196666666666667, "CPUProfilingMetrics.STD_DEV_CPU_UTIL": 0.8987274954685153, "CPUProfilingMetrics.BASELINE_CPU_UTIL": 11.633333333333333}, "custom": {"data_resolution": "(960,576)"}, "metadata": {"BenchmarkMetadata.NAME": "Isaac ROS Bi3D Freespace Graph Benchmark", "BenchmarkMetadata.TEST_FILE_PATH": "/workspaces/isaac_ros-dev/ros_ws/src/isaac_ros_benchmark/scripts/isaac_ros_bi3d_fs_graph.py", "BenchmarkMetadata.TEST_DATETIME": "2023-05-25T07:46:57Z", "BenchmarkMetadata.DEVICE_HOSTNAME": "ros-n7ok3m2m4fc6beahh2rtvlu7le", "BenchmarkMetadata.DEVICE_ARCH": "aarch64", "BenchmarkMetadata.DEVICE_OS": "Linux 5.10.104-tegra #1 SMP PREEMPT Wed Feb 1 14:17:37 PST 2023", "BenchmarkMetadata.IDLE_CPU_UTIL": 0.8333333333333334, "BenchmarkMetadata.BENCHMARK_MODE": 1, "BenchmarkMetadata.PEAK_THROUGHPUT_PREDICTION": 24.0625, "BenchmarkMetadata.INPUT_DATA_PATH": "/workspaces/isaac_ros-dev/ros_ws/src/ros2_benchmark/assets/datasets/r2b_dataset/r2b_lounge", "BenchmarkMetadata.INPUT_DATA_SIZE": 4080820224, "BenchmarkMetadata.INPUT_DATA_HASH": "720ce30055ee3d49e760f384ad402a03", "BenchmarkMetadata.CONFIG": "ros2_benchmark_config:\n  additional_fixed_publisher_rate_tests:\n  - 10.0\n  - 30.0\n  - 60.0\n  assets_root: /workspaces/isaac_ros-dev/ros_ws/src/ros2_benchmark/assets\n  benchmark_duration: 5.0\n  benchmark_mode: BenchmarkMode.LOOPING\n  benchmark_name: Isaac ROS Bi3D Freespace Graph Benchmark\n  benchmark_namespace: r2b\n  binary_search_acceptable_frame_loss_fraction: 0.05\n  binary_search_acceptable_frame_rate_drop: 10.0\n  binary_search_duration_fraction: 1.0\n  binary_search_terminal_interval_width: 10.0\n  cpu_profiling_interval_sec: 1.0\n  custom_report_info:\n    data_resolution: Resolution(960, 576, )\n  default_config_version: 0.30.0\n  default_service_future_timeout_sec: 15.0\n  enable_cpu_profiler: true\n  enable_trial_buffer_preparation: false\n  enforce_publisher_rate: false\n  input_data_end_time: -1.0\n  input_data_path: datasets/r2b_dataset/r2b_lounge\n  input_data_start_time: -1.0\n  linear_scan_acceptable_frame_loss_fraction: 0.05\n  linear_scan_acceptable_frame_rate_drop: 5.0\n  linear_scan_duration_fraction: 1.0\n  linear_scan_step_size: 5.0\n  load_data_in_real_time: false\n  log_file_name: kpi.json\n  log_folder: /osmo/data/output\n  monitor_info_list:\n  - calculators:\n    - class_name: BasicPerformanceCalculator\n      config:\n        report_prefix: ''\n      module_name: ros2_benchmark.basic_performance_calculator\n    service_name: start_monitoring0\n  play_messages_service_future_timeout_sec: 15.0\n  playback_message_buffer_size: 10\n  publish_tf_messages_in_set_data: false\n  publish_tf_static_messages_in_set_data: false\n  publisher_lower_frequency: 10.0\n  publisher_upper_frequency: 300.0\n  record_data_timeline: false\n  revise_timestamps_as_message_ids: false\n  set_data_service_future_timeout_sec: 60.0\n  setup_service_client_timeout_sec: 20.0\n  start_monitoring_service_timeout_sec: 10\n  start_recording_service_future_timeout_sec: 35.0\n  start_recording_service_timeout_sec: 30\n  test_iterations: 5\n"}}
+{
+    "BasicPerformanceMetrics.RECEIVED_DURATION": 5402.414794921875,
+    "BasicPerformanceMetrics.MEAN_PLAYBACK_FRAME_RATE": 24.204739987254232,
+    "BasicPerformanceMetrics.MEAN_FRAME_RATE": 21.292392261997666,
+    "BasicPerformanceMetrics.NUM_MISSED_FRAMES": 5.333333333333333,
+    "BasicPerformanceMetrics.NUM_FRAMES_SENT": 120.0,
+    "BasicPerformanceMetrics.FIRST_SENT_RECEIVED_LATENCY": 105.89021809895833,
+    "BasicPerformanceMetrics.LAST_SENT_RECEIVED_LATENCY": 548.5863444010416,
+    "BasicPerformanceMetrics.MAX_JITTER": 100.28515625,
+    "BasicPerformanceMetrics.MIN_JITTER": 0.24609375,
+    "BasicPerformanceMetrics.MEAN_JITTER": 58.091285036321274,
+    "BasicPerformanceMetrics.STD_DEV_JITTER": 28.44104150809279,
+    "CPUProfilingMetrics.MAX_CPU_UTIL": 43.73333333333333,
+    "CPUProfilingMetrics.MIN_CPU_UTIL": 19.333333333333332,
+    "CPUProfilingMetrics.MEAN_CPU_UTIL": 31.322777777777777,
+    "CPUProfilingMetrics.STD_DEV_CPU_UTIL": 9.122637100654876,
+    "CPUProfilingMetrics.BASELINE_CPU_UTIL": 37.07222222222222,
+    "10.0fps": {
+        "BasicPerformanceMetrics.RECEIVED_DURATION": 4897.748779296875,
+        "BasicPerformanceMetrics.MEAN_PLAYBACK_FRAME_RATE": 10.204157386970397,
+        "BasicPerformanceMetrics.MEAN_FRAME_RATE": 10.208771877266036,
+        "BasicPerformanceMetrics.NUM_MISSED_FRAMES": 0,
+        "BasicPerformanceMetrics.NUM_FRAMES_SENT": 50,
+        "BasicPerformanceMetrics.FIRST_SENT_RECEIVED_LATENCY": 70.460693359375,
+        "BasicPerformanceMetrics.LAST_SENT_RECEIVED_LATENCY": 68.245849609375,
+        "BasicPerformanceMetrics.MAX_JITTER": 30.2568359375,
+        "BasicPerformanceMetrics.MIN_JITTER": 0.146240234375,
+        "BasicPerformanceMetrics.MEAN_JITTER": 7.9484303792317705,
+        "BasicPerformanceMetrics.STD_DEV_JITTER": 5.9720400666908775,
+        "CPUProfilingMetrics.MAX_CPU_UTIL": 32.65,
+        "CPUProfilingMetrics.MIN_CPU_UTIL": 29.833333333333332,
+        "CPUProfilingMetrics.MEAN_CPU_UTIL": 31.18333333333333,
+        "CPUProfilingMetrics.STD_DEV_CPU_UTIL": 1.1476062042355824,
+        "CPUProfilingMetrics.BASELINE_CPU_UTIL": 30.650000000000002
+    },
+    "custom": {
+        "data_resolution": "(960,576)"
+    },
+    "metadata": {
+        "BenchmarkMetadata.NAME": "Isaac ROS Bi3D Freespace Graph Benchmark",
+        "BenchmarkMetadata.TEST_FILE_PATH": "/workspaces/isaac_ros-dev/ros_ws/src/isaac_ros_benchmark/scripts/isaac_ros_bi3d_fs_graph.py",
+        "BenchmarkMetadata.TEST_DATETIME": "2023-10-17T07:25:06Z",
+        "BenchmarkMetadata.DEVICE_HOSTNAME": "ros-lddi57ub6veivnbrcbnqmaneeu",
+        "BenchmarkMetadata.DEVICE_ARCH": "aarch64",
+        "BenchmarkMetadata.DEVICE_OS": "Linux 5.10.120-tegra #1 SMP PREEMPT Tue Aug 1 12:32:50 PDT 2023",
+        "BenchmarkMetadata.IDLE_CPU_UTIL": 1.0,
+        "BenchmarkMetadata.BENCHMARK_MODE": 1,
+        "BenchmarkMetadata.PEAK_THROUGHPUT_PREDICTION": 24.0625,
+        "BenchmarkMetadata.INPUT_DATA_PATH": "/workspaces/isaac_ros-dev/ros_ws/src/ros2_benchmark/assets/datasets/r2b_dataset/r2b_lounge",
+        "BenchmarkMetadata.INPUT_DATA_SIZE": 4080820224,
+        "BenchmarkMetadata.INPUT_DATA_HASH": "720ce30055ee3d49e760f384ad402a03",
+        "BenchmarkMetadata.CONFIG": "ros2_benchmark_config:\n  additional_fixed_publisher_rate_tests:\n  - 10.0\n  - 30.0\n  - 60.0\n  assets_root: /workspaces/isaac_ros-dev/ros_ws/src/ros2_benchmark/assets\n  benchmark_duration: 5.0\n  benchmark_mode: BenchmarkMode.LOOPING\n  benchmark_name: Isaac ROS Bi3D Freespace Graph Benchmark\n  benchmark_namespace: r2b\n  binary_search_acceptable_frame_loss_fraction: 0.05\n  binary_search_acceptable_frame_rate_drop: 10.0\n  binary_search_duration_fraction: 1.0\n  binary_search_terminal_interval_width: 10.0\n  cpu_profiling_interval_sec: 1.0\n  custom_report_info:\n    data_resolution: Resolution(960, 576, )\n  default_config_version: 0.30.0\n  default_service_future_timeout_sec: 15.0\n  enable_cpu_profiler: true\n  enable_trial_buffer_preparation: false\n  enforce_publisher_rate: false\n  input_data_end_time: -1.0\n  input_data_path: datasets/r2b_dataset/r2b_lounge\n  input_data_start_time: -1.0\n  linear_scan_acceptable_frame_loss_fraction: 0.05\n  linear_scan_acceptable_frame_rate_drop: 5.0\n  linear_scan_duration_fraction: 1.0\n  linear_scan_step_size: 5.0\n  load_data_in_real_time: false\n  log_file_name: kpi.json\n  log_folder: /osmo/data/output\n  monitor_info_list:\n  - calculators:\n    - class_name: BasicPerformanceCalculator\n      config:\n        report_prefix: ''\n      module_name: ros2_benchmark.basic_performance_calculator\n    service_name: start_monitoring0\n  play_messages_service_future_timeout_sec: 15.0\n  playback_message_buffer_size: 10\n  publish_tf_messages_in_set_data: false\n  publish_tf_static_messages_in_set_data: false\n  publisher_lower_frequency: 10.0\n  publisher_upper_frequency: 300.0\n  record_data_timeline: false\n  revise_timestamps_as_message_ids: false\n  ros1_ws: /workspaces/isaac_ros-dev/isaac_ros_1-dev\n  set_data_service_future_timeout_sec: 60.0\n  setup_service_client_timeout_sec: 20.0\n  start_monitoring_service_timeout_sec: 10\n  start_recording_service_future_timeout_sec: 35.0\n  start_recording_service_timeout_sec: 30\n  test_iterations: 5\n"
+    }
+}

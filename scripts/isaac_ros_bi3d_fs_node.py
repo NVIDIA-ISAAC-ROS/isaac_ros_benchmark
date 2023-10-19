@@ -20,9 +20,9 @@ Performance test for the Isaac ROS FreespaceSegmentationNode.
 The graph consists of the following:
 - Preprocessors:
     1. PrepLeftResizeNode, PrepRightResizeNode: resizes images to 960 x 576
-    2. Bi3DNode: creates proximity segmentation disparity image from stereo pair
+    2. Bi3DNode: creates depth segmentation disparity image from stereo pair
 - Graph under Test:
-    1. FreespaceSegmentationNode: creates occupancy grid from proximity segmentation disparity image
+    1. FreespaceSegmentationNode: creates occupancy grid from depth segmentation disparity image
 
 Required:
 - Packages:
@@ -112,7 +112,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         remappings=[('image', 'data_loader/left_image'),
                     ('camera_info', 'data_loader/left_camera_info'),
                     ('resize/image', 'left_image_bi3d'),
-                    ('resize/camera_info', 'left/camera_info')],
+                    ('resize/camera_info', 'left_camera_info_bi3d')],
     )
 
     prep_right_resize_node = ComposableNode(
@@ -127,7 +127,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         remappings=[('image', 'data_loader/right_image'),
                     ('camera_info', 'data_loader/right_camera_info'),
                     ('resize/image', 'right_image_bi3d'),
-                    ('resize/camera_info', 'right/camera_info')],
+                    ('resize/camera_info', 'right_camera_info_bi3d')],
     )
 
     bi3d_node = ComposableNode(
