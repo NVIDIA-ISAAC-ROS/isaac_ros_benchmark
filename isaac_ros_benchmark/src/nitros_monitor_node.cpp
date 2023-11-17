@@ -167,11 +167,25 @@ void NitrosMonitorNode::CreateNitrosMonitorSubscriber()
 template<typename T>
 void NitrosMonitorNode::ROSTypeMonitorSubscriberCallback(const std::shared_ptr<T> msg)
 {
-  if (revise_timestamps_as_message_ids_) {
-    RecordEndTimestamp(msg->header.stamp.sec);
-  } else {
-    RecordEndTimestampAutoKey();
+  std::lock_guard<std::mutex> lock(is_monitoring_mutex_);
+  if (!is_monitoring_) {
+    return;
   }
+
+  uint32_t timestamp_key;
+  if (revise_timestamps_as_message_ids_) {
+    timestamp_key = msg->header.stamp.sec;
+  } else {
+    // Use increamental numbers as timestamp keys
+    timestamp_key = end_timestamps_.size();
+  }
+  if (record_start_timestamps_) {
+    std::chrono::time_point<std::chrono::system_clock> start_timestamp(
+      std::chrono::seconds(msg->header.stamp.sec) +
+      std::chrono::nanoseconds(msg->header.stamp.nanosec));
+    RecordStartTimestamp(timestamp_key, start_timestamp);
+  }
+  RecordEndTimestamp(timestamp_key);
 }
 
 void NitrosMonitorNode::NitrosTypeMonitorSubscriberCallback(
@@ -180,22 +194,42 @@ void NitrosMonitorNode::NitrosTypeMonitorSubscriberCallback(
 {
   (void)data_format_name;
 
-  if (revise_timestamps_as_message_ids_) {
-    gxf_result_t code;
-    std_msgs::msg::Header ros_header;
+  std::lock_guard<std::mutex> lock(is_monitoring_mutex_);
+  if (!is_monitoring_) {
+    return;
+  }
 
-    code = nvidia::isaac_ros::nitros::GetTypeAdapterNitrosContext().getEntityTimestamp(
-      msg_base.handle, ros_header);
-    if (code != GXF_SUCCESS) {
+  uint32_t timestamp_key;
+  if (revise_timestamps_as_message_ids_) {
+    std_msgs::msg::Header ros_header;
+    if (nvidia::isaac_ros::nitros::GetTypeAdapterNitrosContext().getEntityTimestamp(
+        msg_base.handle, ros_header) != GXF_SUCCESS)
+    {
       RCLCPP_ERROR(
         get_logger(),
         "[NitrosMonitorNode] getEntityTimestamp Error");
     }
-
-    RecordEndTimestamp(ros_header.stamp.sec);
+    timestamp_key = ros_header.stamp.sec;
   } else {
-    RecordEndTimestampAutoKey();
+    timestamp_key = end_timestamps_.size();
   }
+
+  if (record_start_timestamps_) {
+    std_msgs::msg::Header ros_header;
+    if (nvidia::isaac_ros::nitros::GetTypeAdapterNitrosContext().getEntityTimestamp(
+        msg_base.handle, ros_header) != GXF_SUCCESS)
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "[NitrosMonitorNode] getEntityTimestamp Error");
+    } else {
+      std::chrono::time_point<std::chrono::system_clock> start_timestamp(
+        std::chrono::seconds(ros_header.stamp.sec) +
+        std::chrono::nanoseconds(ros_header.stamp.nanosec));
+      RecordStartTimestamp(timestamp_key, start_timestamp);
+    }
+  }
+  RecordEndTimestamp(timestamp_key);
 }
 
 }  // namespace isaac_ros_benchmark
