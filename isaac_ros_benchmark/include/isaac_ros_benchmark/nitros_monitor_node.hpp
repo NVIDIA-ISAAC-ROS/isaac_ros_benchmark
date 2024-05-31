@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
-// Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// Copyright (c) 2023-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 
+#include "isaac_ros_nitros/nitros_subscriber.hpp"
 #include "isaac_ros_nitros/types/nitros_type_base.hpp"
 #include "isaac_ros_nitros/types/nitros_type_manager.hpp"
 
@@ -56,11 +57,14 @@ private:
   /// Subscriber callback function for the Nitros type message monitor (that adds
   /// end timestamps.)
   void NitrosTypeMonitorSubscriberCallback(
-    nvidia::isaac_ros::nitros::NitrosTypeBase & msg_base,
-    std::string data_format_name);
+    const gxf_context_t,
+    nvidia::isaac_ros::nitros::NitrosTypeBase & msg_base);
 
   /// The monitor subscriber should subscriber to a Nitros type or a ROS message type.
   bool use_nitros_type_monitor_sub_{true};
+
+  // Nitros subscriber for monitoring incoming NITROS type messages
+  std::shared_ptr<nvidia::isaac_ros::nitros::NitrosSubscriber> nitros_sub_;
 
   /// Nitros type manager.
   std::shared_ptr<nvidia::isaac_ros::nitros::NitrosTypeManager> nitros_type_manager_;
