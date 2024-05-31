@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
-# Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,11 +40,24 @@ endif()
 ament_auto_add_library(nitros_playback_node SHARED src/nitros_playback_node.cpp)
 rclcpp_components_register_nodes(nitros_playback_node "isaac_ros_benchmark::NitrosPlaybackNode")
 set(node_plugins "${node_plugins}isaac_ros_benchmark::NitrosPlaybackNode;$<TARGET_FILE:nitros_playback_node>\n")
+set_target_properties(nitros_playback_node PROPERTIES
+  BUILD_WITH_INSTALL_RPATH TRUE
+  BUILD_RPATH_USE_ORIGIN TRUE
+  INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # NitrosMonitorNode
 ament_auto_add_library(nitros_monitor_node SHARED src/nitros_monitor_node.cpp)
 rclcpp_components_register_nodes(nitros_monitor_node "isaac_ros_benchmark::NitrosMonitorNode")
 set(node_plugins "${node_plugins}isaac_ros_benchmark::NitrosMonitorNode;$<TARGET_FILE:nitros_monitor_node>\n")
+set_target_properties(nitros_monitor_node PROPERTIES
+  BUILD_WITH_INSTALL_RPATH TRUE
+  BUILD_RPATH_USE_ORIGIN TRUE
+  INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# Install Python executables
+install(PROGRAMS
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -61,8 +74,8 @@ if(BUILD_TESTING)
 
   find_package(launch_testing_ament_cmake REQUIRED)
 
-  add_launch_test(test/nitros_playback_node_pol.py TIMEOUT "15")
-  add_launch_test(test/nitros_monitor_node_pol.py TIMEOUT "15")
+  add_launch_test(test/nitros_playback_node_pol.py TIMEOUT "60")
+  add_launch_test(test/nitros_monitor_node_pol.py TIMEOUT "60")
 endif()
 
 ament_auto_package(INSTALL_TO_SHARE config)

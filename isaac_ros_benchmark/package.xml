@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <!--
- SPDX-FileCopyrightText: Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ SPDX-FileCopyrightText: Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>isaac_ros_benchmark</name>
-  <version>2.1.0</version>
+  <version>3.0.0</version>
   <description>Isaac ROS benchmarking utilities</description>
 
-  <maintainer email="hemals@nvidia.com">Hemal Shah</maintainer>
+  <maintainer email="isaac-ros-maintainers@nvidia.com">Isaac ROS Maintainers</maintainer>
   <license>Apache-2.0</license>
   <url type="website">https://developer.nvidia.com/isaac-ros/</url>
   <author>CY Chen</author>
@@ -38,7 +38,9 @@
   <depend>rclcpp_components</depend>
   <depend>rclpy</depend>
 
+  <depend>sensor_msgs</depend>
   <depend>ros2_benchmark</depend>
+  <depend>isaac_ros_gxf</depend>
   <depend>isaac_ros_nitros</depend>
   <depend>isaac_ros_nitros_april_tag_detection_array_type</depend>
   <depend>isaac_ros_nitros_camera_info_type</depend>
@@ -62,6 +64,7 @@
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>
+  <test_depend>isaac_ros_test</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

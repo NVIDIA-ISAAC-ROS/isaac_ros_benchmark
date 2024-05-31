@@ -1,0 +1,6 @@
+---
+sensors:
+  front_stereo_camera:
+  back_stereo_camera:
+  left_stereo_camera:
+  right_stereo_camera:

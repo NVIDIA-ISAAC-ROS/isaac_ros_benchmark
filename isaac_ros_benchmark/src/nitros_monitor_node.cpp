@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
-// Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// Copyright (c) 2023-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -138,10 +138,10 @@ void NitrosMonitorNode::CreateNitrosMonitorSubscriber()
     monitor_data_format_.c_str());
   nitros_type_manager_->loadExtensions(monitor_data_format_);
 
-  rclcpp::SubscriptionOptions sub_options;
-  sub_options.use_intra_process_comm = rclcpp::IntraProcessSetting::Enable;
-
-  std::function<void(nvidia::isaac_ros::nitros::NitrosTypeBase &, const std::string)>
+  // Create a NITROS subscriber for monitoring
+  std::function<void(
+      const gxf_context_t,
+      nvidia::isaac_ros::nitros::NitrosTypeBase & msg_base)>
   monitor_subscriber_callback =
     std::bind(
     &NitrosMonitorNode::NitrosTypeMonitorSubscriberCallback,
@@ -149,19 +149,34 @@ void NitrosMonitorNode::CreateNitrosMonitorSubscriber()
     std::placeholders::_1,
     std::placeholders::_2);
 
-  nitros_type_manager_->getFormatCallbacks(monitor_data_format_)
-  .createCompatibleSubscriberCallback(
+  std::vector<std::string> supported_data_formats{monitor_data_format_};
+
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wpedantic"
+  nvidia::isaac_ros::nitros::NitrosPublisherSubscriberConfig nitros_sub_config = {
+    .type = nvidia::isaac_ros::nitros::NitrosPublisherSubscriberType::NEGOTIATED,
+    .qos = ros2_benchmark::kQoS,
+    .compatible_data_format = monitor_data_format_,
+    .topic_name = "output",
+    .callback = monitor_subscriber_callback,
+  };
+  #pragma GCC diagnostic pop
+
+  nvidia::isaac_ros::nitros::NitrosStatisticsConfig statistics_config = {};
+
+  nitros_sub_ = std::make_shared<nvidia::isaac_ros::nitros::NitrosSubscriber>(
     *this,
-    monitor_sub_,
-    "output",
-    ros2_benchmark::kQoS,
-    monitor_subscriber_callback,
-    sub_options);
+    nvidia::isaac_ros::nitros::GetTypeAdapterNitrosContext().getContext(),
+    nitros_type_manager_,
+    supported_data_formats,
+    nitros_sub_config,
+    statistics_config);
+
+  nitros_sub_->start();
 
   RCLCPP_INFO(
     get_logger(),
-    "[NitrosMonitorNode] Created an NITROS type monitor subscriber: topic=\"%s\"",
-    monitor_sub_->get_topic_name());
+    "[NitrosMonitorNode] Created an NITROS type monitor subscriber");
 }
 
 template<typename T>
@@ -189,11 +204,9 @@ void NitrosMonitorNode::ROSTypeMonitorSubscriberCallback(const std::shared_ptr<T
 }
 
 void NitrosMonitorNode::NitrosTypeMonitorSubscriberCallback(
-  nvidia::isaac_ros::nitros::NitrosTypeBase & msg_base,
-  std::string data_format_name)
+  const gxf_context_t,
+  nvidia::isaac_ros::nitros::NitrosTypeBase & msg_base)
 {
-  (void)data_format_name;
-
   std::lock_guard<std::mutex> lock(is_monitoring_mutex_);
   if (!is_monitoring_) {
     return;
