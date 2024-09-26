@@ -43,7 +43,7 @@ Please visit the [Isaac ROS Documentation](https://nvidia-isaac-ros.github.io/re
 
 ## Latest
 
-Update 2024-05-30: Restructure benchmark scripts into packages
+Update 2024-09-26: Updated for Isaac ROS 3.1
 
 ## Performance
 
