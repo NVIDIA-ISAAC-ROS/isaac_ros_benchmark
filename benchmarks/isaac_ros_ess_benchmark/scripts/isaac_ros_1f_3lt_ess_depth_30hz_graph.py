@@ -21,8 +21,8 @@ Required:
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_hideaway
 - Models:
-    - assets/models/ess/ess.etlt
-    - assets/models/ess/light_ess.etlt
+    - assets/models/ess/ess.onnx
+    - assets/models/ess/light_ess.onnx
 """
 
 import os

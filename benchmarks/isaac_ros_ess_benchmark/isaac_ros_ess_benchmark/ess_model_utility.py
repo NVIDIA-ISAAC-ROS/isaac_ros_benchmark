@@ -22,9 +22,9 @@ from isaac_ros_ess.engine_generator import ESSEngineGenerator
 from ros2_benchmark import ROS2BenchmarkTest
 
 # ESS mode paths
-FULL_ESS_MODEL_FILE_NAME = 'ess/ess.etlt'
+FULL_ESS_MODEL_FILE_NAME = 'ess/ess.onnx'
 FULL_ESS_ENGINE_FILE_PATH = 'ess/ess.engine'
-LIGHT_ESS_MODEL_FILE_NAME = 'ess/light_ess.etlt'
+LIGHT_ESS_MODEL_FILE_NAME = 'ess/light_ess.onnx'
 LIGHT_ESS_ENGINE_FILE_PATH = 'ess/light_ess.engine'
 
 # ESS mode resolution
@@ -66,10 +66,10 @@ def get_model_paths(ess_model_type, asset_models_root=None):
 def generate_ess_engine_file(ess_model_type, asset_models_root=None):
     ess_model_path, ess_engine_path = get_model_paths(ess_model_type, asset_models_root)
 
-    # Generate engine file using tao-converter
+    # Generate engine file using trtexec
     if not os.path.isfile(ess_engine_path):
         print(f'Generating engine file for {ess_model_type} ESS model...')
-        gen = ESSEngineGenerator(etlt_model=ess_model_path)
+        gen = ESSEngineGenerator(onnx_model=ess_model_path)
         start_time = time.time()
         gen.generate()
         print('ESS model engine file generation was finished '

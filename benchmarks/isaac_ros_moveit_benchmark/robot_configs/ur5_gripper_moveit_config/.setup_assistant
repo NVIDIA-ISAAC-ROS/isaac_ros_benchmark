@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: ur5_robotiq_85_description
+    relative_path: urdf/ur5_robotiq_85.urdf
+  srdf:
+    relative_path: config/ur5_robotiq_85.srdf
+  package_settings:
+    author_name: Isaac ROS Maintainers
+    author_email: isaac-ros-maintainers@nvidia.com
+    generated_timestamp: 1720473006
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity

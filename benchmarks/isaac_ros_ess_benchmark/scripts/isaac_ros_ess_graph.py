@@ -32,7 +32,7 @@ Required:
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_hideaway
 - Models:
-    - assets/models/ess/ess.etlt
+    - assets/models/ess/ess.onnx
 """
 
 import os
@@ -45,7 +45,7 @@ from launch_ros.descriptions import ComposableNode
 from ros2_benchmark import ROS2BenchmarkConfig, ROS2BenchmarkTest
 
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_hideaway'
-MODEL_FILE_NAME = 'ess/ess.etlt'
+MODEL_FILE_NAME = 'ess/ess.onnx'
 ENGINE_FILE_PATH = 'ess/ess.engine'
 NETWORK_WIDTH = 960
 NETWORK_HEIGHT = 576
@@ -188,9 +188,9 @@ def generate_test_description():
     MODELS_ROOT = os.path.join(TestIsaacROSEssStereoGraph.get_assets_root_path(), 'models')
     MODEL_FILE_PATH = os.path.join(MODELS_ROOT, MODEL_FILE_NAME)
 
-    # Generate engine file using tao-converter
+    # Generate engine file using trtexec
     if not os.path.isfile(os.path.join(MODELS_ROOT, ENGINE_FILE_PATH)):
-        gen = ESSEngineGenerator(etlt_model=MODEL_FILE_PATH)
+        gen = ESSEngineGenerator(onnx_model=MODEL_FILE_PATH)
         gen.generate()
     return TestIsaacROSEssStereoGraph.generate_test_description_with_nsys(launch_setup)
 

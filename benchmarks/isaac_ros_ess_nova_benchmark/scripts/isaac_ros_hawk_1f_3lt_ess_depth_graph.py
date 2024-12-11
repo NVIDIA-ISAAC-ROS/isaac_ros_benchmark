@@ -19,8 +19,8 @@ Live performance test for the Isaac ROS Hawk ESS depth (1 full 3 throttled light
 
 Required:
 - Models:
-    - assets/models/ess/ess.etlt
-    - assets/models/ess/light_ess.etlt
+    - assets/models/ess/ess.onnx
+    - assets/models/ess/light_ess.onnx
 """
 
 import os

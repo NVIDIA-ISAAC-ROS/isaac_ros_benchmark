@@ -23,7 +23,7 @@ The graph (without pose refinement) consists of the following:
 - Graph under Test:
     1. DnnImageEncoderNode: turns a raw image into a resized, normalized tensor
     2. TensorRTNode: converts an input tensor into a tensor of belief map
-    3. DopeDecoder: converts a belief map into an array of poses
+    3. DopeDecoder: converts a belief map into an Detection3DArray with all poses
 
 Required:
 - Packages:
@@ -101,7 +101,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'frame_id': 'dope'
         }],
         remappings=[('belief_map_array', 'tensor_sub'),
-                    ('dope/pose_array', 'poses')])
+                    ('dope/detections', 'detections'),
+                    ('camera_info', 'crop/camera_info')])
 
     data_loader_node = ComposableNode(
         name='DataLoaderNode',
@@ -133,10 +134,11 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         package='isaac_ros_benchmark',
         plugin='isaac_ros_benchmark::NitrosMonitorNode',
         parameters=[{
-            'monitor_data_format': 'geometry_msgs/msg/PoseArray',
+            'monitor_data_format': 'nitros_detection3_d_array',
+            'use_nitros_type_monitor_sub': True,
         }],
         remappings=[
-            ('output', 'poses')],
+            ('output', 'detections')],
     )
 
     composable_node_container = ComposableNodeContainer(
@@ -169,7 +171,8 @@ def generate_test_description():
         trt_converter_args = [
             f'--onnx={MODEL_FILE_PATH}',
             f'--saveEngine={ENGINE_FILE_PATH}',
-            '--fp16'
+            '--fp16',
+            '--skipInference',
         ]
         TRTConverter()(trt_converter_args)
     return TestIsaacROSDeepObjectPoseEstimation.generate_test_description_with_nsys(launch_setup)

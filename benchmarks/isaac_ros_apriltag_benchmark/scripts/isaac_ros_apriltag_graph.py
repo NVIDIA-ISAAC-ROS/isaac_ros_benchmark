@@ -111,8 +111,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         package='isaac_ros_benchmark',
         plugin='isaac_ros_benchmark::NitrosMonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_april_tag_detection_array',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'isaac_ros_apriltag_interfaces/msg/AprilTagDetectionArray',
+            'use_nitros_type_monitor_sub': False,
         }],
         remappings=[
             ('output', 'apriltag_detections')],

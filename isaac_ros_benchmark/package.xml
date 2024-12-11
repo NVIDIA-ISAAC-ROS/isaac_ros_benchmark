@@ -21,7 +21,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>isaac_ros_benchmark</name>
-  <version>3.1.0</version>
+  <version>3.2.0</version>
   <description>Isaac ROS benchmarking utilities</description>
 
   <maintainer email="isaac-ros-maintainers@nvidia.com">Isaac ROS Maintainers</maintainer>
@@ -42,7 +42,6 @@
   <depend>ros2_benchmark</depend>
   <depend>isaac_ros_gxf</depend>
   <depend>isaac_ros_nitros</depend>
-  <depend>isaac_ros_nitros_april_tag_detection_array_type</depend>
   <depend>isaac_ros_nitros_camera_info_type</depend>
   <depend>isaac_ros_nitros_disparity_image_type</depend>
   <depend>isaac_ros_nitros_flat_scan_type</depend>

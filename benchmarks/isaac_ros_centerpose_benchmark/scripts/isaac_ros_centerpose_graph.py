@@ -194,7 +194,8 @@ def generate_test_description():
         trt_converter_args = [
             f'--onnx={MODELS_ROOT}/{MODEL_NAME}/centerpose_shoe.onnx',
             f'--saveEngine={ENGINE_FILE_PATH}',
-            '--fp16'
+            '--fp16',
+            '--skipInference',
         ]
         TRTConverter()(trt_converter_args)
 
