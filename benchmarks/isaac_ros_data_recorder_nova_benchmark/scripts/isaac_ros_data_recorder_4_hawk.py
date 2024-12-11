@@ -81,28 +81,22 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         composable_node_descriptions=monitor_nodes
     )
 
-    isaac_ros_data_recorder_launch_include_dir = os.path.join(
-        get_package_share_directory('isaac_ros_data_recorder'), 'launch', 'include')
+    isaac_ros_nova_recorder_launch_dir = os.path.join(
+        get_package_share_directory('isaac_ros_nova_recorder'), 'launch')
 
-    recorder_launch = IncludeLaunchDescription(
+    nova_recorder_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
-            isaac_ros_data_recorder_launch_include_dir,
-            '/recorder.launch.py'
-        ]),
-    )
-
-    sensors_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            isaac_ros_data_recorder_launch_include_dir,
-            '/sensors.launch.py'
+            isaac_ros_nova_recorder_launch_dir,
+            '/nova_recorder.launch.py'
         ]),
         launch_arguments={
             'target_container': 'benchmark_container',
             'config': sensor_config_file,
+            'headless': 'True',
         }.items(),
     )
 
-    return [benchmark_container, load_benchmark_nodes, recorder_launch, sensors_launch]
+    return [benchmark_container, load_benchmark_nodes, nova_recorder_launch]
 
 
 def generate_test_description():

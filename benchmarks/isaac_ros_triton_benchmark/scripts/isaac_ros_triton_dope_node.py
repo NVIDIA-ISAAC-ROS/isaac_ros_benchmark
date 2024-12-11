@@ -173,7 +173,8 @@ def generate_test_description():
         trt_converter_args = [
             f'--onnx={MODEL_FILE_PATH}',
             f'--saveEngine={ENGINE_FILE_PATH}',
-            '--fp16'
+            '--fp16',
+            '--skipInference',
         ]
         TRTConverter()(trt_converter_args)
     return TestIsaacROSTritonNode.generate_test_description_with_nsys(launch_setup)

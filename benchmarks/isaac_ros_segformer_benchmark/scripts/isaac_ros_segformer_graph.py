@@ -170,12 +170,13 @@ def generate_test_description():
     MODELS_ROOT = os.path.join(TestIsaacROSSegformerGraph.get_assets_root_path(), 'models')
     MODEL_FILE_PATH = os.path.join(MODELS_ROOT, MODEL_FILE_NAME)
 
-    # Generate engine file using tao-converter
+    # Generate engine file using trtexec
     if not os.path.isfile(ENGINE_FILE_PATH):
         trt_converter_args = [
             f'--onnx={MODEL_FILE_PATH}',
             f'--saveEngine={ENGINE_FILE_PATH}',
-            '--fp16'
+            '--fp16',
+            '--skipInference',
         ]
         TRTConverter()(trt_converter_args)
     return TestIsaacROSSegformerGraph.generate_test_description_with_nsys(launch_setup)

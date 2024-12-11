@@ -24,7 +24,6 @@
 
 #include "isaac_ros_nitros/types/type_adapter_nitros_context.hpp"
 
-#include "isaac_ros_nitros_april_tag_detection_array_type/nitros_april_tag_detection_array.hpp"
 #include "isaac_ros_nitros_camera_info_type/nitros_camera_info.hpp"
 #include "isaac_ros_nitros_compressed_image_type/nitros_compressed_image.hpp"
 #include "isaac_ros_nitros_detection2_d_array_type/nitros_detection2_d_array.hpp"
@@ -55,8 +54,6 @@ NitrosPlaybackNode::NitrosPlaybackNode(const rclcpp::NodeOptions & options)
   // Create a Nitros type manager for the node
   nitros_type_manager_ = std::make_shared<nvidia::isaac_ros::nitros::NitrosTypeManager>(this);
 
-  nitros_type_manager_->registerSupportedType<
-    nvidia::isaac_ros::nitros::NitrosAprilTagDetectionArray>();
   nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosCameraInfo>();
   nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosDetection2DArray>();
   nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosDetection3DArray>();

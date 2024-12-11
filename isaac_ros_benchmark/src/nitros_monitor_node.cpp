@@ -19,7 +19,6 @@
 
 #include "isaac_ros_nitros/types/type_adapter_nitros_context.hpp"
 
-#include "isaac_ros_nitros_april_tag_detection_array_type/nitros_april_tag_detection_array.hpp"
 #include "isaac_ros_nitros_camera_info_type/nitros_camera_info.hpp"
 #include "isaac_ros_nitros_detection2_d_array_type/nitros_detection2_d_array.hpp"
 #include "isaac_ros_nitros_detection3_d_array_type/nitros_detection3_d_array.hpp"
@@ -46,8 +45,6 @@ NitrosMonitorNode::NitrosMonitorNode(const rclcpp::NodeOptions & options)
   // Create a Nitros type manager for the node
   nitros_type_manager_ = std::make_shared<nvidia::isaac_ros::nitros::NitrosTypeManager>(this);
 
-  nitros_type_manager_->registerSupportedType<
-    nvidia::isaac_ros::nitros::NitrosAprilTagDetectionArray>();
   nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosCameraInfo>();
   nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosDetection2DArray>();
   nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosDetection3DArray>();
@@ -83,7 +80,6 @@ void NitrosMonitorNode::CreateMonitorSubscriber()
     return; \
   }
 
-    CREATE_ROS_TYPE_MONITOR_HELPER(isaac_ros_apriltag_interfaces::msg::AprilTagDetectionArray)
     CREATE_ROS_TYPE_MONITOR_HELPER(sensor_msgs::msg::CameraInfo)
     CREATE_ROS_TYPE_MONITOR_HELPER(stereo_msgs::msg::DisparityImage)
     CREATE_ROS_TYPE_MONITOR_HELPER(sensor_msgs::msg::Image)
@@ -162,7 +158,7 @@ void NitrosMonitorNode::CreateNitrosMonitorSubscriber()
   };
   #pragma GCC diagnostic pop
 
-  nvidia::isaac_ros::nitros::NitrosStatisticsConfig statistics_config = {};
+  nvidia::isaac_ros::nitros::NitrosDiagnosticsConfig diagnostics_config = {};
 
   nitros_sub_ = std::make_shared<nvidia::isaac_ros::nitros::NitrosSubscriber>(
     *this,
@@ -170,7 +166,7 @@ void NitrosMonitorNode::CreateNitrosMonitorSubscriber()
     nitros_type_manager_,
     supported_data_formats,
     nitros_sub_config,
-    statistics_config);
+    diagnostics_config);
 
   nitros_sub_->start();
 

@@ -34,7 +34,8 @@ Required:
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_hallway
 - Models:
-    - assets/models/peoplenet/resnet34_peoplenet_int8.etlt
+    https://catalog.ngc.nvidia.com/orgs/nvidia/teams/tao/models/peoplenet/files?version=deployable_quantized_onnx_v2.6.3
+    - assets/models/peoplenet/resnet34_peoplenet.onnx
     - assets/models/peoplenet/resnet34_peoplenet_int8.txt
     - assets/models/peoplenet/config.pbtxt
     - assets/models/peoplenet/labels.txt
@@ -45,7 +46,7 @@ import shutil
 import time
 
 from ament_index_python.packages import get_package_share_directory
-from isaac_ros_benchmark import TaoConverter
+from isaac_ros_benchmark import TRTConverter
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import ComposableNodeContainer
@@ -99,10 +100,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'model_name': MODEL_NAME,
             'model_repository_paths': [ENGINE_ROOT],
             'input_tensor_names': ['input_tensor'],
-            'input_binding_names': ['input_1'],
+            'input_binding_names': ['input_1:0'],
             'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
             'output_tensor_names': ['output_cov', 'output_bbox'],
-            'output_binding_names': ['output_cov/Sigmoid', 'output_bbox/BiasAdd'],
+            'output_binding_names': ['output_cov/Sigmoid:0', 'output_bbox/BiasAdd:0'],
             'output_tensor_formats': ['nitros_tensor_list_nhwc_rgb_f32'],
         }]
     )
@@ -194,19 +195,19 @@ def generate_test_description():
         os.path.join(MODELS_ROOT, MODEL_CONFIG_FILE_NAME),
         ENGINE_FILE_DIR)
 
-    # Generate engine file using tao-converter
+    # Generate engine file using trtexec
     if not os.path.isfile(ENGINE_FILE_PATH):
-        tao_converter_args = [
-            '-k', 'tlt_encode',
-            '-d', '3,544,960',
-            '-p', 'input_1,1x3x544x960,1x3x544x960,1x3x544x960',
-            '-t', 'int8',
-            '-c', f'{MODELS_ROOT}/{MODEL_NAME}/resnet34_peoplenet_int8.txt',
-            '-e', ENGINE_FILE_PATH,
-            '-o', 'output_cov/Sigmoid,output_bbox/BiasAdd',
-            f'{MODELS_ROOT}/{MODEL_NAME}/resnet34_peoplenet_int8.etlt'
+        trtexec_args = [
+            '--maxShapes=input_1:0:16x3x544x960',
+            '--minShapes=input_1:0:1x3x544x960',
+            '--optShapes=input_1:0:1x3x544x960',
+            f'--onnx={MODELS_ROOT}/{MODEL_NAME}/resnet34_peoplenet.onnx',
+            f'--saveEngine={ENGINE_FILE_PATH}',
+            '--int8',
+            f'--calib={MODELS_ROOT}/{MODEL_NAME}/resnet34_peoplenet_int8.txt',
+            '--skipInference',
         ]
-        TaoConverter()(tao_converter_args)
+        TRTConverter()(trtexec_args)
     return TesetIsaacROSDetectNet.generate_test_description_with_nsys(launch_setup)
 
 

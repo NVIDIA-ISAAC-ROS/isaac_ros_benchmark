@@ -19,7 +19,7 @@ Live performance test for the Isaac ROS Hawk ESS depth (1 light ESS) graph.
 
 Required:
 - Models:
-    - assets/models/ess/light_ess.etlt
+    - assets/models/ess/light_ess.onnx
 """
 
 import os

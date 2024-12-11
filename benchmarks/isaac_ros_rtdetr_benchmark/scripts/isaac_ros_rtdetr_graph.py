@@ -36,12 +36,12 @@ Required:
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_robotarm
 - Models:
-    - assets/models/sdetr/sdetr_grasp.etlt
+    - assets/models/sdetr/sdetr_grasp.onnx
 """
 
 import os
 
-from isaac_ros_benchmark import TaoConverter
+from isaac_ros_benchmark import TRTConverter
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
@@ -52,7 +52,7 @@ IMAGE_RESOLUTION = ImageResolution.HD
 NETWORK_SIZE = 640  # RT-DETR architecture requires square network resolution
 NETWORK_RESOLUTION = Resolution(NETWORK_SIZE, NETWORK_SIZE)
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_robotarm'
-MODEL_FILE_NAME = 'sdetr/sdetr_grasp.etlt'
+MODEL_FILE_NAME = 'sdetr/sdetr_grasp.onnx'
 ENGINE_FILE_PATH = '/tmp/sdetr_grasp.plan'
 
 
@@ -248,17 +248,15 @@ def generate_test_description():
     MODELS_ROOT = os.path.join(TestIsaacROSRtDetr.get_assets_root_path(), 'models')
     MODEL_FILE_PATH = os.path.join(MODELS_ROOT, MODEL_FILE_NAME)
 
-    # Generate engine file using tao-converter
+    # Generate engine file using trtexec
     if not os.path.isfile(ENGINE_FILE_PATH):
-        tao_converter_args = [
-            '-k', 'sdetr',
-            '-t', 'fp16',
-            '-e', ENGINE_FILE_PATH,
-            '-p', 'images,1x3x640x640,2x3x640x640,4x3x640x640',
-            '-p', 'orig_target_sizes,1x2,2x2,4x2',
-            MODEL_FILE_PATH
+        trtexec_args = [
+            f'--onnx={MODEL_FILE_PATH}',
+            f'--saveEngine={ENGINE_FILE_PATH}',
+            '--fp16',
+            '--skipInference',
         ]
-        TaoConverter()(tao_converter_args)
+        TRTConverter()(trtexec_args)
     return TestIsaacROSRtDetr.generate_test_description_with_nsys(launch_setup)
 
 

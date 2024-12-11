@@ -37,10 +37,10 @@ Required:
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_robotarm
 - Models:
-    - assets/models/sdetr/sdetr_grasp.etlt
-    - assets/models/ess/ess.etlt
-    - assets/models/foundationpose/refine_model.etlt
-    - assets/models/foundationpose/score_model.etlt
+    - assets/models/sdetr/sdetr_grasp.onnx
+    - assets/models/ess/ess.onnx
+    - assets/models/foundationpose/refine_model.onnx
+    - assets/models/foundationpose/score_model.onnx
 - Configs:
     - assets/configs/Mac_and_cheese_0_1/Mac_and_cheese_0_1.obj
     - assets/configs/Mac_and_cheese_0_1/materials/textures/baked_mesh_tex0.png
@@ -49,7 +49,7 @@ Required:
 import os
 import time
 
-from isaac_ros_benchmark import TaoConverter
+from isaac_ros_benchmark import TRTConverter
 
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
@@ -62,13 +62,13 @@ ROSBAG_PATH = 'datasets/r2b_dataset/r2b_robotarm'
 MESH_FILE_NAME = 'Mac_and_cheese_0_1/Mac_and_cheese_0_1.obj'
 TEXTURE_MAP_NAME = 'Mac_and_cheese_0_1/materials/textures/baked_mesh_tex0.png'
 
-REFINE_MODEL_NAME = 'foundationpose/refine_model.etlt'
+REFINE_MODEL_NAME = 'foundationpose/refine_model.onnx'
 REFINE_ENGINE_PATH = '/tmp/refine_trt_engine.plan'
 
-SCORE_MODEL_NAME = 'foundationpose/score_model.etlt'
+SCORE_MODEL_NAME = 'foundationpose/score_model.onnx'
 SCORE_ENGINE_PATH = '/tmp/score_trt_engine.plan'
 
-RT_DETR_MODEL_NAME = 'sdetr/sdetr_grasp.etlt'
+RT_DETR_MODEL_NAME = 'sdetr/sdetr_grasp.onnx'
 RT_DETR_ENGINE_PATH = '/tmp/sdetr_grasp.plan'
 
 IMAGE_RESOLUTION = ImageResolution.HD
@@ -245,17 +245,23 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     # Create a binary segmentation mask from a Detection2DArray published by RT-DETR.
     # The segmentation mask is of size
     # int(IMAGE_WIDTH/INPUT_TO_RT_DETR_RATIO) x int(IMAGE_HEIGHT/INPUT_TO_RT_DETR_RATIO)
+    prep_detection2d_filter_node = ComposableNode(
+        name='Detection2dToMaskNode',
+        namespace=TestIsaacROSFoundationPoseGraph.generate_namespace(),
+        package='isaac_ros_foundationpose',
+        plugin='nvidia::isaac_ros::foundationpose::Detection2DArrayFilter',
+        remappings=[('detection2_d_array', 'detections_output')]
+    )
+
     prep_detection2d_to_mask_node = ComposableNode(
         name='Detection2dToMaskNode',
         namespace=TestIsaacROSFoundationPoseGraph.generate_namespace(),
         package='isaac_ros_foundationpose',
         plugin='nvidia::isaac_ros::foundationpose::Detection2DToMask',
         parameters=[{
-            'mask_width': int(IMAGE_RESOLUTION['width'] / INPUT_TO_RT_DETR_RATIO),
-            'mask_height': int(IMAGE_RESOLUTION['height'] / INPUT_TO_RT_DETR_RATIO)
-        }],
+            'mask_width': int(IMAGE_RESOLUTION['width']/INPUT_TO_RT_DETR_RATIO),
+            'mask_height': int(IMAGE_RESOLUTION['height']/INPUT_TO_RT_DETR_RATIO)}],
         remappings=[
-            ('detection2_d_array', 'detections_output'),
             ('segmentation', 'rt_detr_segmentation')
         ]
     )
@@ -364,7 +370,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             prep_resize_left_rt_detr_node,
             prep_image_to_tensor_node, prep_pad_node, prep_reshape_node,
             prep_interleave_to_planar_node, prep_rtdetr_preprocessor_node,
-            prep_rtdetr_tensor_rt_node, prep_rtdetr_decoder_node, prep_detection2d_to_mask_node,
+            prep_rtdetr_tensor_rt_node, prep_rtdetr_decoder_node,
+            prep_detection2d_filter_node,
+            prep_detection2d_to_mask_node,
             prep_resize_mask_node, prep_foundationpose_node,
             playback_node,
             foundationpose_tracking_node,
@@ -381,51 +389,49 @@ def generate_test_description():
     REFINE_MODEL_PATH = os.path.join(MODELS_ROOT, REFINE_MODEL_NAME)
     SCORE_MODEL_PATH = os.path.join(MODELS_ROOT, SCORE_MODEL_NAME)
 
-    # Generate engine file using tao-converter
+    # Generate engine file using trtexec
     if not os.path.isfile(RT_DETR_ENGINE_PATH):
         print('Generating an engine file for the RT-DETR model...')
         start_time = time.time()
-        tao_converter_args = [
-            '-k', 'sdetr',
-            '-t', 'fp16',
-            '-e', RT_DETR_ENGINE_PATH,
-            '-p', 'images,1x3x640x640,2x3x640x640,4x3x640x640',
-            '-p', 'orig_target_sizes,1x2,2x2,4x2',
-            RT_DETR_MODEL_PATH
+        trtexec_args = [
+            f'--onnx={RT_DETR_MODEL_PATH}',
+            f'--saveEngine={RT_DETR_ENGINE_PATH}',
+            '--fp16',
+            '--skipInference',
         ]
-        TaoConverter()(tao_converter_args)
+        TRTConverter()(trtexec_args)
         print('RT-DETR model engine file generation was finished '
               f'(took {(time.time() - start_time)}s)')
 
     if not os.path.isfile(REFINE_ENGINE_PATH):
         print('Generating an engine file for the Refine model...')
         start_time = time.time()
-        tao_converter_args = [
-            '-k', 'foundationpose',
-            '-t', 'fp16',
-            '-e', REFINE_ENGINE_PATH,
-            '-p', 'input1,1x160x160x6,1x160x160x6,252x160x160x6',
-            '-p', 'input2,1x160x160x6,1x160x160x6,252x160x160x6',
-            '-o', 'output1,output2',
-            REFINE_MODEL_PATH
+        trtexec_args = [
+            f'--onnx={REFINE_MODEL_PATH}',
+            f'--saveEngine={REFINE_ENGINE_PATH}',
+            '--fp16',
+            '--minShapes=input1:1x160x160x6,input2:1x160x160x6',
+            '--optShapes=input1:1x160x160x6,input2:1x160x160x6',
+            '--maxShapes=input1:42x160x160x6,input2:42x160x160x6',
+            '--skipInference',
         ]
-        TaoConverter()(tao_converter_args)
+        TRTConverter()(trtexec_args)
         print('Refine model engine file generation was finished '
               f'(took {(time.time() - start_time)}s)')
 
     if not os.path.isfile(SCORE_ENGINE_PATH):
         print('Generating an engine file for the Score model...')
         start_time = time.time()
-        tao_converter_args = [
-            '-k', 'foundationpose',
-            '-t', 'fp16',
-            '-e', SCORE_ENGINE_PATH,
-            '-p', 'input1,1x160x160x6,1x160x160x6,252x160x160x6',
-            '-p', 'input2,1x160x160x6,1x160x160x6,252x160x160x6',
-            '-o', 'output1',
-            SCORE_MODEL_PATH
+        trtexec_args = [
+            f'--onnx={SCORE_MODEL_PATH}',
+            f'--saveEngine={SCORE_ENGINE_PATH}',
+            '--fp16',
+            '--minShapes=input1:1x160x160x6,input2:1x160x160x6',
+            '--optShapes=input1:1x160x160x6,input2:1x160x160x6',
+            '--maxShapes=input1:252x160x160x6,input2:252x160x160x6',
+            '--skipInference',
         ]
-        TaoConverter()(tao_converter_args)
+        TRTConverter()(trtexec_args)
         print('Score model engine file generation was finished '
               f'(took {(time.time() - start_time)}s)')
 

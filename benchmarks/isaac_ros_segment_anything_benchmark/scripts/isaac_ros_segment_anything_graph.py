@@ -47,7 +47,7 @@ Required:
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_robotarm
 - Models:
-    - assets/models/sdetr/sdetr_grasp.etlt
+    - assets/models/sdetr/sdetr_grasp.onnx
     - assets/models/segment_anything/sam.onnx
     - assets/models/segment_anything/config.pbtxt
 """
@@ -56,7 +56,7 @@ import os
 import shutil
 import time
 
-from isaac_ros_benchmark import TaoConverter
+from isaac_ros_benchmark import TRTConverter
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
@@ -77,7 +77,7 @@ PROMPT_INPUT_TYPE = 'bbox'
 TRITON_MODEL_DIR = '/tmp/models/segment_anything/segment_anything/1/'
 TRITON_CONFIG_PATH = '/tmp/models/segment_anything/segment_anything/'
 
-RTDETR_MODEL_FILE_NAME = 'sdetr/sdetr_grasp.etlt'
+RTDETR_MODEL_FILE_NAME = 'sdetr/sdetr_grasp.onnx'
 RTDETR_ENGINE_FILE_PATH = '/tmp/sdetr_grasp.plan'
 
 
@@ -499,17 +499,15 @@ def generate_test_description():
 
     RTDETR_MODEL_FILE_PATH = os.path.join(MODELS_ROOT, RTDETR_MODEL_FILE_NAME)
 
-    # Generate engine file using tao-converter
+    # Generate engine file using trtexec
     if not os.path.isfile(RTDETR_ENGINE_FILE_PATH):
-        tao_converter_args = [
-            '-k', 'sdetr',
-            '-t', 'fp16',
-            '-e', RTDETR_ENGINE_FILE_PATH,
-            '-p', 'images,1x3x640x640,2x3x640x640,4x3x640x640',
-            '-p', 'orig_target_sizes,1x2,2x2,4x2',
-            RTDETR_MODEL_FILE_PATH
+        trtexec_args = [
+            f'--onnx={RTDETR_MODEL_FILE_PATH}',
+            f'--saveEngine={RTDETR_ENGINE_FILE_PATH}',
+            '--fp16',
+            '--skipInference',
         ]
-        TaoConverter()(tao_converter_args)
+        TRTConverter()(trtexec_args)
 
     return TestIsaacROSSegmentAnythingGraph.generate_test_description_with_nsys(launch_setup)
 

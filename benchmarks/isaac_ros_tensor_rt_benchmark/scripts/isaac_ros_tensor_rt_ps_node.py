@@ -30,7 +30,7 @@ Required:
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_hallway
 - Models:
-    - assets/models/peoplesemsegnet_shuffleseg/peoplesemsegnet_shuffleseg_etlt.etlt
+    - assets/models/peoplesemsegnet_shuffleseg/peoplesemsegnet_shuffleseg.onnx
     - assets/models/peoplesemsegnet_shuffleseg/peoplesemsegnet_shuffleseg_cache.txt
 """
 
@@ -39,7 +39,7 @@ import time
 
 
 from ament_index_python.packages import get_package_share_directory
-from isaac_ros_benchmark import TaoConverter
+from isaac_ros_benchmark import TRTConverter
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import ComposableNodeContainer
@@ -160,16 +160,13 @@ def generate_test_description():
 
     # Generate engine file using trt-converter
     if not os.path.isfile(ENGINE_FILE_PATH):
-        tao_converter_args = [
-            '-k', 'tlt_encode',
-            '-p', 'input_2:0,1x3x544x960,1x3x544x960,1x3x544x960',
-            '-t', 'int8',
-            '-c', f'{MODEL_DIR}/peoplesemsegnet_shuffleseg_cache.txt',
-            '-e', ENGINE_FILE_PATH,
-            '-o', 'argmax_1',
-            f'{MODEL_DIR}/peoplesemsegnet_shuffleseg_etlt.etlt'
+        trtexec_args = [
+            f'--onnx={MODEL_DIR}/peoplesemsegnet_shuffleseg.onnx',
+            f'--saveEngine={ENGINE_FILE_PATH}',
+            '--fp16',
+            '--skipInference',
         ]
-        TaoConverter()(tao_converter_args)
+        TRTConverter()(trtexec_args)
     return TestIsaacROSTensorRTNode.generate_test_description_with_nsys(launch_setup)
 
 
