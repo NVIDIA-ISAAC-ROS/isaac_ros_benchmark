@@ -139,9 +139,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         plugin='nvidia::isaac_ros::dnn_inference::ReshapeNode',
         parameters=[{
             'output_tensor_name': 'input_tensor',
-            'input_tensor_shape': [3, NETWORK_RESOLUTION['width'], NETWORK_RESOLUTION['height']],
+            'input_tensor_shape': [3, NETWORK_RESOLUTION['height'], NETWORK_RESOLUTION['width']],
             'output_tensor_shape': [
-                1, 3, NETWORK_RESOLUTION['width'], NETWORK_RESOLUTION['height']]
+                1, 3, NETWORK_RESOLUTION['height'], NETWORK_RESOLUTION['width']]
         }],
         remappings=[
             ('tensor', 'planar_tensor')
