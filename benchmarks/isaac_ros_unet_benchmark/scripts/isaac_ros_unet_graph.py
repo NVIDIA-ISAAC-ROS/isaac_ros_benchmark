@@ -40,10 +40,7 @@ Required:
 import os
 import time
 
-from ament_index_python.packages import get_package_share_directory
 from isaac_ros_benchmark import TRTConverter
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
@@ -59,25 +56,78 @@ ENGINE_FILE_PATH = '/tmp/peoplesemsegnet_shuffleseg.plan'
 
 def launch_setup(container_prefix, container_sigterm_timeout):
     """Generate launch description for U-Net."""
-    encoder_dir = get_package_share_directory('isaac_ros_dnn_image_encoder')
-    encoder_node_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [os.path.join(encoder_dir, 'launch', 'dnn_image_encoder.launch.py')]
-        ),
-        launch_arguments={
-            'input_image_width': str(IMAGE_RESOLUTION['width']),
-            'input_image_height': str(IMAGE_RESOLUTION['height']),
-            'network_image_width': str(NETWORK_RESOLUTION['width']),
-            'network_image_height': str(NETWORK_RESOLUTION['height']),
-            'image_mean': str([0.5, 0.5, 0.5]),
-            'image_stddev': str([0.5, 0.5, 0.5]),
-            'encoding_desired': 'rgb8',
-            'tensor_output_topic': 'tensor_pub',
-            'attach_to_shared_component_container': 'True',
-            'component_container_name':
-                f'{TestIsaacROSUNetGraph.generate_namespace()}/unet_container',
-            'dnn_image_encoder_namespace': TestIsaacROSUNetGraph.generate_namespace(),
-        }.items(),
+    resize_node = ComposableNode(
+        name='ResizeNode',
+        namespace=TestIsaacROSUNetGraph.generate_namespace(),
+        package='isaac_ros_image_proc',
+        plugin='nvidia::isaac_ros::image_proc::ResizeNode',
+        parameters=[{
+            'input_width': IMAGE_RESOLUTION['width'],
+            'input_height': IMAGE_RESOLUTION['height'],
+            'output_width': NETWORK_RESOLUTION['width'],
+            'output_height': NETWORK_RESOLUTION['height'],
+            'keep_aspect_ratio': True,
+            'encoding_desired': 'rgb8'
+        }]
+    )
+
+    image_format_converter_node = ComposableNode(
+        name='ImageFormatConverter',
+        namespace=TestIsaacROSUNetGraph.generate_namespace(),
+        package='isaac_ros_image_proc',
+        plugin='nvidia::isaac_ros::image_proc::ImageFormatConverterNode',
+        parameters=[{
+                'encoding_desired': 'rgb8',
+                'image_width': NETWORK_RESOLUTION['width'],
+                'image_height': NETWORK_RESOLUTION['height']
+        }],
+        remappings=[
+            ('image_raw', 'resize/image'),
+            ('image', 'image_rgb')]
+    )
+
+    image_to_tensor_node = ComposableNode(
+        name='ImageToTensorNode',
+        namespace=TestIsaacROSUNetGraph.generate_namespace(),
+        package='isaac_ros_tensor_proc',
+        plugin='nvidia::isaac_ros::dnn_inference::ImageToTensorNode',
+        parameters=[{
+            'scale': False,
+            'tensor_name': 'image',
+        }],
+        remappings=[
+            ('image', 'image_rgb')
+        ]
+    )
+
+    normalize_node = ComposableNode(
+        name='NormalizeNode',
+        namespace=TestIsaacROSUNetGraph.generate_namespace(),
+        package='isaac_ros_tensor_proc',
+        plugin='nvidia::isaac_ros::dnn_inference::ImageTensorNormalizeNode',
+        parameters=[{
+            'mean': [0.5, 0.5, 0.5],
+            'stddev': [0.5, 0.5, 0.5],
+            'input_tensor_name': 'image',
+            'output_tensor_name': 'image'
+        }]
+    )
+
+    reshape_node = ComposableNode(
+        name='ReshapeNode',
+        namespace=TestIsaacROSUNetGraph.generate_namespace(),
+        package='isaac_ros_tensor_proc',
+        plugin='nvidia::isaac_ros::dnn_inference::ReshapeNode',
+        parameters=[{
+            'output_tensor_name': 'input_tensor',
+            'input_tensor_shape': [NETWORK_RESOLUTION['height'], NETWORK_RESOLUTION['width'], 3],
+            'output_tensor_shape': [
+                1, NETWORK_RESOLUTION['height'], NETWORK_RESOLUTION['width'], 3]
+        }],
+        remappings=[
+            ('tensor', 'normalized_tensor'),
+            ('reshaped_tensor', 'tensor_pub')
+        ],
     )
 
     tensorrt_node = ComposableNode(
@@ -90,7 +140,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'output_binding_names': ['argmax_1'],
             'output_tensor_names': ['output'],
             'input_tensor_names': ['input_tensor'],
-            'input_binding_names': ['input_2:0'],
+            'input_binding_names': ['input_2'],
             'verbose': False,
             'force_engine_update': False,
             'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
@@ -157,14 +207,16 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         composable_node_descriptions=[
             data_loader_node,
             playback_node,
-            monitor_node,
+            resize_node, image_format_converter_node,
+            image_to_tensor_node, normalize_node, reshape_node,
             tensorrt_node,
-            unet_decoder_node
+            unet_decoder_node,
+            monitor_node
         ],
         output='screen',
     )
 
-    return [composable_node_container, encoder_node_launch]
+    return [composable_node_container]
 
 
 def generate_test_description():
@@ -174,9 +226,9 @@ def generate_test_description():
     # Generate engine file using trtexec
     if not os.path.isfile(ENGINE_FILE_PATH):
         trtexec_args = [
-            '--maxShapes=input_2:0:1x3x544x960',
-            '--minShapes=input_2:0:1x3x544x960',
-            '--optShapes=input_2:0:1x3x544x960',
+            '--maxShapes=input_2:1x544x960x3',
+            '--minShapes=input_2:1x544x960x3',
+            '--optShapes=input_2:1x544x960x3',
             f'--onnx={MODEL_DIR}/peoplesemsegnet_shuffleseg.onnx',
             f'--saveEngine={ENGINE_FILE_PATH}',
             '--fp16',

@@ -38,10 +38,7 @@ import os
 import time
 
 
-from ament_index_python.packages import get_package_share_directory
 from isaac_ros_benchmark import TRTConverter
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
@@ -71,7 +68,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'output_tensor_names': ['output'],
             'output_tensor_formats': ['nitros_tensor_list_nhwc_rgb_f32'],
             'input_tensor_names': ['input_tensor'],
-            'input_binding_names': ['input_2:0'],
+            'input_binding_names': ['input_2'],
             'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
             'verbose': False,
             'force_engine_update': False,
@@ -87,27 +84,82 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                     ('hawk_0_left_rgb_camera_info', 'data_loader/camera_info')]
     )
 
-    encoder_dir = get_package_share_directory('isaac_ros_dnn_image_encoder')
-    encoder_node_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [os.path.join(encoder_dir, 'launch', 'dnn_image_encoder.launch.py')]
-        ),
-        launch_arguments={
-            'input_image_width': str(IMAGE_RESOLUTION['width']),
-            'input_image_height': str(IMAGE_RESOLUTION['height']),
-            'network_image_width': str(NETWORK_RESOLUTION['width']),
-            'network_image_height': str(NETWORK_RESOLUTION['height']),
-            'image_mean': str([0.5, 0.5, 0.5]),
-            'image_stddev': str([0.5, 0.5, 0.5]),
-            'encoding_desired': 'rgb8',
-            'image_input_topic': 'data_loader/image',
-            'camera_info_input_topic': 'data_loader/camera_info',
-            'tensor_output_topic': 'buffer/input',
-            'attach_to_shared_component_container': 'True',
-            'component_container_name':
-                f'{TestIsaacROSTensorRTNode.generate_namespace()}/tensor_rt_container',
-            'dnn_image_encoder_namespace': TestIsaacROSTensorRTNode.generate_namespace(),
-        }.items(),
+    resize_node = ComposableNode(
+        name='ResizeNode',
+        namespace=TestIsaacROSTensorRTNode.generate_namespace(),
+        package='isaac_ros_image_proc',
+        plugin='nvidia::isaac_ros::image_proc::ResizeNode',
+        parameters=[{
+            'input_width': IMAGE_RESOLUTION['width'],
+            'input_height': IMAGE_RESOLUTION['height'],
+            'output_width': NETWORK_RESOLUTION['width'],
+            'output_height': NETWORK_RESOLUTION['height'],
+            'keep_aspect_ratio': True,
+            'encoding_desired': 'rgb8'
+        }],
+        remappings=[
+            ('image', 'data_loader/image'),
+            ('camera_info', 'data_loader/camera_info')
+        ]
+    )
+
+    image_format_converter_node = ComposableNode(
+        name='ImageFormatConverter',
+        namespace=TestIsaacROSTensorRTNode.generate_namespace(),
+        package='isaac_ros_image_proc',
+        plugin='nvidia::isaac_ros::image_proc::ImageFormatConverterNode',
+        parameters=[{
+                'encoding_desired': 'rgb8',
+                'image_width': NETWORK_RESOLUTION['width'],
+                'image_height': NETWORK_RESOLUTION['height']
+        }],
+        remappings=[
+            ('image_raw', 'resize/image'),
+            ('image', 'image_rgb')]
+    )
+
+    image_to_tensor_node = ComposableNode(
+        name='ImageToTensorNode',
+        namespace=TestIsaacROSTensorRTNode.generate_namespace(),
+        package='isaac_ros_tensor_proc',
+        plugin='nvidia::isaac_ros::dnn_inference::ImageToTensorNode',
+        parameters=[{
+            'scale': False,
+            'tensor_name': 'image',
+        }],
+        remappings=[
+            ('image', 'image_rgb')
+        ]
+    )
+
+    normalize_node = ComposableNode(
+        name='NormalizeNode',
+        namespace=TestIsaacROSTensorRTNode.generate_namespace(),
+        package='isaac_ros_tensor_proc',
+        plugin='nvidia::isaac_ros::dnn_inference::ImageTensorNormalizeNode',
+        parameters=[{
+            'mean': [0.5, 0.5, 0.5],
+            'stddev': [0.5, 0.5, 0.5],
+            'input_tensor_name': 'image',
+            'output_tensor_name': 'image'
+        }]
+    )
+
+    reshape_node = ComposableNode(
+        name='ReshapeNode',
+        namespace=TestIsaacROSTensorRTNode.generate_namespace(),
+        package='isaac_ros_tensor_proc',
+        plugin='nvidia::isaac_ros::dnn_inference::ReshapeNode',
+        parameters=[{
+            'output_tensor_name': 'input_tensor',
+            'input_tensor_shape': [NETWORK_RESOLUTION['height'], NETWORK_RESOLUTION['width'], 3],
+            'output_tensor_shape': [
+                1, NETWORK_RESOLUTION['height'], NETWORK_RESOLUTION['width'], 3]
+        }],
+        remappings=[
+            ('tensor', 'normalized_tensor'),
+            ('reshaped_tensor', 'buffer/input')
+        ],
     )
 
     playback_node = ComposableNode(
@@ -144,14 +196,16 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         sigterm_timeout=container_sigterm_timeout,
         composable_node_descriptions=[
             data_loader_node,
+            resize_node, image_format_converter_node,
+            image_to_tensor_node, normalize_node, reshape_node,
             playback_node,
-            monitor_node,
-            tensor_rt_node
+            tensor_rt_node,
+            monitor_node
         ],
         output='screen'
     )
 
-    return [composable_node_container, encoder_node_launch]
+    return [composable_node_container]
 
 
 def generate_test_description():
