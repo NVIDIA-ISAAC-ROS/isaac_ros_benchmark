@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ur5_robotiq_85_description</name>
-  <version>3.2.0</version>
+  <version>3.2.4</version>
   <description>Robot description for UR5 with Robotiq 2F-85 gripper</description>
   <maintainer email="isaac-ros-maintainers@nvidia.com">Isaac ROS Maintainers</maintainer>
   <license>Apache-2.0</license>
