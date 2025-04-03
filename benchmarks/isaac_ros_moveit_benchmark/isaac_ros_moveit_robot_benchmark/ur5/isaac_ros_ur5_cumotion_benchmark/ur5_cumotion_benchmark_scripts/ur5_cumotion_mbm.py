@@ -20,7 +20,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from isaac_ros_moveit_benchmark import PlanningPipeline, RobotGroup, TestPlannerMBM
 
-from launch.actions import IncludeLaunchDescription
+from launch.actions import GroupAction, IncludeLaunchDescription, SetEnvironmentVariable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
@@ -66,12 +66,21 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     cumotion_move_group_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [robot_moveit_launch_dir, '/demo.launch.py']),
-        launch_arguments={'default_planning_pipeline': 'isaac_ros_cumotion'}.items()
+        launch_arguments={
+            'default_planning_pipeline': 'isaac_ros_cumotion',
+            'use_rviz': 'False'}.items()
+    )
+
+    cumotion_move_group_action = GroupAction(
+        actions=[
+            SetEnvironmentVariable(name='DISPLAY', value='""'),
+            cumotion_move_group_launch,
+        ]
     )
 
     return [
         cumotion_planner_node,
-        cumotion_move_group_launch
+        cumotion_move_group_action,
     ]
 
 

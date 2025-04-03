@@ -20,7 +20,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from isaac_ros_moveit_benchmark import PlanningPipeline, RobotGroup, TestPlannerMBM
 
-from launch.actions import IncludeLaunchDescription
+from launch.actions import GroupAction, IncludeLaunchDescription, SetEnvironmentVariable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
@@ -37,11 +37,20 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         get_package_share_directory('ur5_gripper_moveit_config'), 'launch')
     ompl_move_group_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([robot_moveit_launch_dir, '/demo.launch.py']),
-        launch_arguments={'default_planning_pipeline': 'ompl'}.items()
+        launch_arguments={
+            'default_planning_pipeline': 'ompl',
+            'use_rviz': 'False'}.items()
+    )
+
+    ompl_move_group_action = GroupAction(
+        actions=[
+            SetEnvironmentVariable(name='DISPLAY', value='""'),
+            ompl_move_group_launch,
+        ]
     )
 
     return [
-        ompl_move_group_launch,
+        ompl_move_group_action,
     ]
 
 
