@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
+import time
 from typing import Any, Dict, List
 
 from curobo.geom.sdf.world import WorldConfig
@@ -91,6 +92,7 @@ class TestPlannerMBM(TestPlanner):
                                                                  pose,
                                                                  planner)
                             planner_response_list.append(planner_response)
+                            time.sleep(5)
                 self._resource_profiler.stop_profiling()
                 self.get_logger().info('Resource profiling stopped.')
 
@@ -165,8 +167,6 @@ class TestPlannerMBM(TestPlanner):
                 'TRRTkConfigDefault',
                 'PRMkConfigDefault',
                 'ESTkConfigDefault',
-                'RRTstarkConfigDefault',
-                'PRMstarkConfigDefault',
             ]
         elif planning_pipline == 'isaac_ros_cumotion':
             available_planners = ['cuMotion']

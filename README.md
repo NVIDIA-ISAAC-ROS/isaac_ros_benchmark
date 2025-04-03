@@ -40,6 +40,11 @@ Please visit the [Isaac ROS Documentation](https://nvidia-isaac-ros.github.io/re
 * [`isaac_ros_benchmark`](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_benchmark/isaac_ros_benchmark/index.html)
   * [Quickstart](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_benchmark/isaac_ros_benchmark/index.html#quickstart)
   * [Troubleshooting](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_benchmark/isaac_ros_benchmark/index.html#troubleshooting)
+* [`isaac_ros_moveit_benchmark`](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_benchmark/benchmarks/isaac_ros_moveit_benchmark/index.html)
+  * [Overview](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_benchmark/benchmarks/isaac_ros_moveit_benchmark/index.html#overview)
+  * [Setup](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_benchmark/benchmarks/isaac_ros_moveit_benchmark/index.html#setup)
+  * [Running the Benchmark](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_benchmark/benchmarks/isaac_ros_moveit_benchmark/index.html#running-the-benchmark)
+  * [Available Metrics](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_benchmark/benchmarks/isaac_ros_moveit_benchmark/index.html#available-metrics)
 
 ## Latest
 
