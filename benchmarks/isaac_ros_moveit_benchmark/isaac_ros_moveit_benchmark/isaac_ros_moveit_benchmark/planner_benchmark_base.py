@@ -444,7 +444,7 @@ class TestPlanner(ROS2BenchmarkTest):
                        joint_start_positions, ee_pose):
         goal_msg = MoveGroup.Goal()
         motion_plan_request = MotionPlanRequest()
-        motion_plan_request.allowed_planning_time = 30.0
+        motion_plan_request.allowed_planning_time = 60.0
         motion_plan_request.max_velocity_scaling_factor = 1.0
         motion_plan_request.max_acceleration_scaling_factor = 1.0
         motion_plan_request.planner_id = planner_id

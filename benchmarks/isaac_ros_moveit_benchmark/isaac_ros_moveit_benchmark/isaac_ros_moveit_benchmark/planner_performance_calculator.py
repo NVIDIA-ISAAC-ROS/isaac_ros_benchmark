@@ -15,6 +15,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from copy import deepcopy
+
 from enum import Enum
 
 import numbers
@@ -67,6 +69,7 @@ class PlannerPerformanceCalculator():
         self._report_prefix = config.get('report_prefix', '')
         self._logger = None
         self._perf_data_list = []
+        self._problems_data_list = []
 
     def set_logger(self, logger):
         """Set logger that enables to print log messages."""
@@ -89,6 +92,7 @@ class PlannerPerformanceCalculator():
     def reset(self):
         """Reset the calculator state."""
         self._perf_data_list.clear()
+        self._problems_data_list.clear()
 
     def calculate_performance(self, planner_response_list) -> dict:
         """Calculate performance based on planner action service response."""
@@ -102,6 +106,12 @@ class PlannerPerformanceCalculator():
         success_count = 0
         for planner_response in planner_response_list:
             if planner_response.error_code.val != MoveItErrorCodes.SUCCESS:
+                self._problems_data_list.append({
+                    'planning_time': numpy.nan,
+                    'motion_time': numpy.nan,
+                    'path_length': numpy.nan,
+                    'max_jerk': numpy.nan,
+                })
                 continue
             success_count += 1
 
@@ -151,6 +161,12 @@ class PlannerPerformanceCalculator():
 
             motion_time.append(duration.nanoseconds * 1e-9)
             planning_time.append(planner_response.planning_time * 1000)
+            self._problems_data_list.append({
+                'planning_time': planning_time[-1],
+                'motion_time': motion_time[-1],
+                'path_length': path_length[-1],
+                'max_jerk': jerk[-1],
+            })
 
         # Planning success rate
         planning_success_rate = 100 * success_count / len(planner_response_list)
@@ -235,6 +251,7 @@ class PlannerPerformanceCalculator():
             else:
                 final_perf_data[metric] = 'INVALID VALUES: NO CONCLUDED METHOD ASSIGNED'
 
+        final_perf_data['per_problem_metrics'] = deepcopy(self._problems_data_list)
         self.reset()
         if self._report_prefix != '':
             return {self._report_prefix: final_perf_data}
