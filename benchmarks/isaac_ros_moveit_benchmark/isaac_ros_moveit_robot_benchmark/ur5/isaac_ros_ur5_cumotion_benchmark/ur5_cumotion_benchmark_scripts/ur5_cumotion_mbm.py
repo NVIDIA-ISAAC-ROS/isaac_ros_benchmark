@@ -50,6 +50,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         output='screen',
         arguments=['--ros-args', '--log-level', 'error'],
         parameters=[{'robot': robot_xrdf_path},
+                    {'max_attempts': 5},
                     {'time_dilation_factor': 1.0},
                     {'tool_frame': 'wrist_3_link'},
                     {'urdf_path': robot_urdf_path},

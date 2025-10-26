@@ -75,10 +75,10 @@ void NitrosMonitorNode::CreateMonitorSubscriber()
       nitros_type_manager_->getFormatCallbacks(monitor_data_format_).getROSTypeName();
 
     #define CREATE_ROS_TYPE_MONITOR_HELPER(ROS_TYPE_NAME) \
-  if (ros_type_name == rosidl_generator_traits::name<ROS_TYPE_NAME>()) { \
-    CreateROSTypeMonitorSubscriber<ROS_TYPE_NAME>(); \
-    return; \
-  }
+      if (ros_type_name == rosidl_generator_traits::name<ROS_TYPE_NAME>()) { \
+        CreateROSTypeMonitorSubscriber<ROS_TYPE_NAME>(); \
+        return; \
+      }
 
     CREATE_ROS_TYPE_MONITOR_HELPER(sensor_msgs::msg::CameraInfo)
     CREATE_ROS_TYPE_MONITOR_HELPER(stereo_msgs::msg::DisparityImage)

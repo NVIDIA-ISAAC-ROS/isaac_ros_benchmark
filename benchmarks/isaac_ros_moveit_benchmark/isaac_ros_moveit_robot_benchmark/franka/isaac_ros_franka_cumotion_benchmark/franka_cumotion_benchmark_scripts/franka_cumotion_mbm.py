@@ -41,6 +41,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         arguments=['--ros-args', '--log-level', 'error'],
         parameters=[
                 {'robot': 'franka.yml'},
+                {'max_attempts': 3},
                 {'time_dilation_factor': 1.0},
                 {'tool_frame': 'panda_link8'},
                 {'num_trajopt_time_steps': 48},

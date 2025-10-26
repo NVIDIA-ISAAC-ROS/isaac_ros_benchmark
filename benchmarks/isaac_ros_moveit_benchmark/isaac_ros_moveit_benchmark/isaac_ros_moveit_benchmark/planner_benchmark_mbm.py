@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-import time
 from typing import Any, Dict, List
 
 from curobo.geom.sdf.world import WorldConfig
@@ -60,6 +59,7 @@ class TestPlannerMBM(TestPlanner):
 
         planner_id_list = self.get_available_planners(self.planning_pipline)
         final_perf_results = {}
+        final_all_problem_perf_results = {}
 
         for planner in planner_id_list:
             self.get_logger().info(f'Evaluating planning_pipeline: {self.planning_pipline} '
@@ -84,15 +84,14 @@ class TestPlannerMBM(TestPlanner):
                         for _, scene in enumerate(tqdm(scene_problems, leave=False)):
                             self.setup_mbm_planning_problem(scene)
                             self.get_logger().info(
-                                f'Evaluating planning_pipeline: {self.planning_pipline}'
-                                'with planner: {planner}')
+                                f'Evaluating planning_pipeline: {self.planning_pipline} '
+                                f'with planner: {planner}')
                             pose = self.robot.goal_pose_list[0]
                             planner_response = self.send_ee_goal(self._planning_options,
                                                                  self.robot.home_state,
                                                                  pose,
                                                                  planner)
                             planner_response_list.append(planner_response)
-                            time.sleep(5)
                 self._resource_profiler.stop_profiling()
                 self.get_logger().info('Resource profiling stopped.')
 
@@ -106,7 +105,14 @@ class TestPlannerMBM(TestPlanner):
                 self.print_report(performance_results, sub_heading=f'{planner} - #{i+1}')
 
             final_planner_perf_results = {}
-            final_planner_perf_results.update(planner_perf_calculator.conclude_performance())
+            planner_results = planner_perf_calculator.conclude_performance()
+
+            # Write the per problem metrics to a temp dict and invalidate the key
+            # in planner_results to avoid it from being printed
+            final_all_problem_perf_results[f'{planner}'] = planner_results['per_problem_metrics']
+            planner_results.pop('per_problem_metrics', None)
+
+            final_planner_perf_results.update(planner_results)
             self.print_report(final_planner_perf_results, sub_heading=f'{planner} - Summary')
 
             final_perf_results[f'{planner}'] = final_planner_perf_results
@@ -116,6 +122,10 @@ class TestPlannerMBM(TestPlanner):
         print('\r\n')
         self.print_report(final_report, sub_heading='Final Report', print_func=print)
         print('\r\n')
+
+        for planner in final_all_problem_perf_results.keys():
+            final_report[planner]['per_problem_metrics'] = final_all_problem_perf_results[planner]
+
         self.export_report(final_report)
 
     def setup_mbm_planning_problem(self, problem: Dict[str, Any]) -> None:

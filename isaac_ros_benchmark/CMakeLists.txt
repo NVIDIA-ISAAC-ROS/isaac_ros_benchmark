@@ -28,12 +28,15 @@ find_package(ament_cmake_python REQUIRED)
 ament_auto_find_build_dependencies()
 ament_python_install_package(${PROJECT_NAME})
 
+# Ensure CUDA imported targets (e.g., CUDA::nvtx3) are available
+find_package(CUDAToolkit REQUIRED)
+
 # NVTX
 option(USE_NVTX "Enable NVTX markers for improved profiling (if available)" ON)
 if(USE_NVTX)
     add_definitions(-DUSE_NVTX)
     link_directories("${CUDA_TOOLKIT_ROOT_DIR}/lib64")
-    link_libraries("nvToolsExt")
+    link_libraries("CUDA::nvtx3")
 endif()
 
 # NitrosPlaybackNode
