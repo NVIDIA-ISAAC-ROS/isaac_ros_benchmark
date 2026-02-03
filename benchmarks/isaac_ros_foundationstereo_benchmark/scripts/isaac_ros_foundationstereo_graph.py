@@ -445,7 +445,6 @@ def generate_test_description():
         trtexec_args = [
             f'--onnx={MODEL_FILE_PATH}',
             f'--saveEngine={ENGINE_FILE_PATH}',
-            '--fp16',
             '--skipInference'
         ]
         TRTConverter()(trtexec_args)
