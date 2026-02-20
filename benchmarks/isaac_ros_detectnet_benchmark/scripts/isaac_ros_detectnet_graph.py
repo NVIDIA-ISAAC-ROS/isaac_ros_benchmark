@@ -230,7 +230,7 @@ class TesetIsaacROSDetectNet(ROS2BenchmarkTest):
     )
 
     # Amount of seconds to wait for DetectNet to be initialized
-    DETECTNET_WAIT_SEC = 60
+    DETECTNET_WAIT_SEC = 180
 
     def pre_benchmark_hook(self):
         # Wait for model to be generated

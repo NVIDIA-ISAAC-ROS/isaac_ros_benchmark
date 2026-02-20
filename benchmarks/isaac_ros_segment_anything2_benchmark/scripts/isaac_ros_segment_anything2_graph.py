@@ -367,7 +367,7 @@ class TestIsaacROSSegmentAnything2Graph(ROS2BenchmarkTest):
         }
     )
 
-    TRITON_WAIT_SEC = 20
+    TRITON_WAIT_SEC = 120
 
     def pre_benchmark_hook(self):
         # Wait for Triton Node to be loaded
