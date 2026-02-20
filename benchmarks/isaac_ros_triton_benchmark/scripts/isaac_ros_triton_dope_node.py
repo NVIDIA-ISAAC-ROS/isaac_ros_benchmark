@@ -199,7 +199,7 @@ class TestIsaacROSTritonNode(ROS2BenchmarkTest):
     )
 
     # Amount of seconds to wait for Triton Engine to be initialized
-    TRITON_WAIT_SEC = 60
+    TRITON_WAIT_SEC = 120
 
     def pre_benchmark_hook(self):
         # Wait for model to be generated

@@ -463,7 +463,7 @@ class TestIsaacROSFoundationPoseGraph(ROS2BenchmarkTest):
     )
 
     # Amount of seconds to wait for TRT Engine to be initialized
-    TRT_WAIT_SEC = 10
+    TRT_WAIT_SEC = 150
 
     def pre_benchmark_hook(self):
         # Wait for model to be generated

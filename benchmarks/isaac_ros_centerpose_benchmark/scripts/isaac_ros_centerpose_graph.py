@@ -224,7 +224,7 @@ class TestIsaacROSCenterPose(ROS2BenchmarkTest):
     )
 
     # Amount of seconds to wait for TensorRT Engine to be initialized
-    TENSOR_RT_WAIT_SEC = 60
+    TENSOR_RT_WAIT_SEC = 150
 
     def pre_benchmark_hook(self):
         # Wait for model to be generated
