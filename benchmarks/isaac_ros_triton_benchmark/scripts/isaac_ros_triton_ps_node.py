@@ -69,11 +69,11 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'model_repository_paths': [ENGINE_ROOT],
             'max_batch_size': 0,
             'input_tensor_names': ['input_tensor'],
-            'input_binding_names': ['input_2'],
+            'input_binding_names': ['input_2:0'],
             'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
             'output_tensor_names': ['output'],
             'output_binding_names': ['argmax_1'],
-            'output_tensor_formats': ['nitros_tensor_list_nhwc_rgb_f32'],
+            'output_tensor_formats': ['nitros_tensor_list_nhwc'],
         }],
         remappings=[('tensor_pub', 'input'), ('tensor_sub', 'output')]
     )
@@ -157,7 +157,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'output_tensor_name': 'input_tensor',
             'input_tensor_shape': [NETWORK_RESOLUTION['height'], NETWORK_RESOLUTION['width'], 3],
             'output_tensor_shape': [
-                1, NETWORK_RESOLUTION['height'], NETWORK_RESOLUTION['width'], 3]
+                1, 3, NETWORK_RESOLUTION['height'], NETWORK_RESOLUTION['width']]
         }],
         remappings=[
             ('tensor', 'normalized_tensor'),
@@ -185,7 +185,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         package='isaac_ros_benchmark',
         plugin='isaac_ros_benchmark::NitrosMonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_tensor_list_nhwc_rgb_f32',
+            'monitor_data_format': 'nitros_tensor_list_nhwc',
             'use_nitros_type_monitor_sub': True,
         }],
     )
@@ -225,9 +225,9 @@ def generate_test_description():
             f'--onnx={MODELS_ROOT}/{MODEL_NAME}/peoplesemsegnet_shuffleseg.onnx',
             f'--saveEngine={ENGINE_FILE_PATH}',
             '--fp16',
-            '--minShapes=input_2:1x544x960x3',
-            '--optShapes=input_2:1x544x960x3',
-            '--maxShapes=input_2:16x544x960x3',
+            '--minShapes=input_2:0:1x3x544x960',
+            '--optShapes=input_2:0:1x3x544x960',
+            '--maxShapes=input_2:0:16x3x544x960',
             '--skipInference',
         ]
         TRTConverter()(trtexec_args)

@@ -35,10 +35,17 @@ Required:
     - isaac_ros_image_proc
     - isaac_ros_visual_slam
     - isaac_ros_nvblox
+    - hawk_description
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_hideaway
 """
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
+
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
@@ -53,6 +60,16 @@ IMAGE_RESOLUTION = ImageResolution.WUXGA
 
 def launch_setup(container_prefix, container_sigterm_timeout):
     """Generate launch description for Isaac ROS NvbloxNode."""
+    hawk_description_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('hawk_description'),
+                'launch',
+                'hawk_description.launch.py',
+            )
+        )
+    )
+
     nvblox_node = ComposableNode(
         name='NvbloxNode',
         package='nvblox_ros',
@@ -146,13 +163,16 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             ('visual_slam/camera_info_0', 'hawk_0_left_rgb_camera_info'),
             ('visual_slam/image_1', 'hawk_0_right_mono_image'),
             ('visual_slam/camera_info_1', 'hawk_0_right_rgb_camera_info'),
-            ('visual_slam/imu', 'camera/imu'),
             ('/tf', 'visual_slam/tf')
         ],
         parameters=[{
-            'enable_rectified_pose': True,
             'denoise_input_images': False,
-            'rectified_images': True,
+            'rectified_images': False,
+            'base_frame': 'base_link',
+            'camera_optical_frames': [
+                'hawk_stereo_camera_left_optical',
+                'hawk_stereo_camera_right_optical',
+            ],
         }]
     )
 
@@ -232,7 +252,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         output='screen'
     )
 
-    return [composable_node_container]
+    return [hawk_description_launch, composable_node_container]
 
 
 def generate_test_description():
