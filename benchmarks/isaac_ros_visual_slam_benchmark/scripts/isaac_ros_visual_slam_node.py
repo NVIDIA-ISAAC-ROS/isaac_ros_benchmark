@@ -26,11 +26,18 @@ The graph consists of the following:
 Required:
 - Packages:
     - isaac_ros_visual_slam
+    - hawk_description
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_cafe
 """
 
-from launch_ros.actions import ComposableNodeContainer, Node
+import os
+
+from ament_index_python.packages import get_package_share_directory
+
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
 from ros2_benchmark import BenchmarkMode, ROS2BenchmarkConfig, ROS2BenchmarkTest
@@ -40,13 +47,14 @@ ROSBAG_PATH = 'datasets/r2b_dataset/r2b_cafe'
 
 def launch_setup(container_prefix, container_sigterm_timeout):
     """Generate launch description for VSLAM node."""
-    # We add a static tf here because the the one from the bag is wrong.
-    static_tf_left = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', '1', 'D455_1', 'D455_1:left_ir_corrected'],
-        output='screen',
+    hawk_description_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('hawk_description'),
+                'launch',
+                'hawk_description.launch.py',
+            )
+        )
     )
 
     visual_slam_node = ComposableNode(
@@ -58,15 +66,14 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             ('visual_slam/image_0', 'left/image_raw'),
             ('visual_slam/camera_info_0', 'left/camera_info'),
             ('visual_slam/image_1', 'right/image_raw'),
-            ('visual_slam/camera_info_1', 'right/camera_info'),
-            ('visual_slam/imu', 'camera/imu')],
+            ('visual_slam/camera_info_1', 'right/camera_info')],
         parameters=[{
             'enable_image_denoising': False,
-            'rectified_images': True,
+            'rectified_images': False,
             'base_frame': 'base_link',
             'camera_optical_frames': [
-                 'D455_1:left_ir_corrected',
-                 'D455_1:right_ir',
+                 'hawk_stereo_camera_left_optical',
+                 'hawk_stereo_camera_right_optical',
             ],
         }],
     )
@@ -77,11 +84,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         package='ros2_benchmark',
         plugin='ros2_benchmark::DataLoaderNode',
         remappings=[
-            ('d455_1_left_ir_image', 'buffer/image_left'),
-            ('d455_1_left_ir_camera_info', 'buffer/camera_info_left'),
-            ('d455_1_right_ir_image', 'buffer/image_right'),
-            ('d455_1_right_ir_camera_info', 'buffer/camera_info_right'),
-            ('d455_1_imu', 'buffer/d455_1_imu')]
+            ('hawk_0_left_rgb_image', 'buffer/image_left'),
+            ('hawk_0_left_rgb_camera_info', 'buffer/camera_info_left'),
+            ('hawk_0_right_rgb_image', 'buffer/image_right'),
+            ('hawk_0_right_rgb_camera_info', 'buffer/camera_info_right')]
     )
 
     playback_node = ComposableNode(
@@ -94,8 +100,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                 'sensor_msgs/msg/Image',
                 'sensor_msgs/msg/CameraInfo',
                 'sensor_msgs/msg/Image',
-                'sensor_msgs/msg/CameraInfo',
-                'sensor_msgs/msg/Imu'],
+                'sensor_msgs/msg/CameraInfo'],
         }],
         remappings=[('buffer/input0', 'buffer/image_left'),
                     ('input0', 'left/image_raw'),
@@ -104,9 +109,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                     ('buffer/input2', 'buffer/image_right'),
                     ('input2', 'right/image_raw'),
                     ('buffer/input3', 'buffer/camera_info_right'),
-                    ('input3', 'right/camera_info'),
-                    ('buffer/input4', 'buffer/d455_1_imu'),
-                    ('input4', 'camera/imu')],
+                    ('input3', 'right/camera_info')],
     )
 
     monitor_node = ComposableNode(
@@ -137,7 +140,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         output='screen'
     )
 
-    return [static_tf_left, composable_node_container]
+    return [hawk_description_launch, composable_node_container]
 
 
 def generate_test_description():
