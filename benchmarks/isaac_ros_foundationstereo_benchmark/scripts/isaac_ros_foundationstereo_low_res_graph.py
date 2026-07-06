@@ -23,12 +23,13 @@ The graph consists of the following:
        Reshape Nodes: Turns raw images into appropriately-shaped tensors
     2. TensorPairSyncNode: Syncs left and right tensors and prepares them for TensorRT inference
     3. TensorRTNode: Runs TensorRT inference
-    4. FoundationStereoDecoderNode: Decodes disparity from TensorRT output
+    4. DNNStereoDecoderNode: Decodes disparity from TensorRT output
     5. PointCloudNode: Converts disparity to pointcloud
 
 Required:
 - Packages:
     - isaac_ros_foundationstereo
+    - isaac_ros_dnn_stereo_decoder
     - isaac_ros_image_proc
     - isaac_ros_tensor_proc
     - isaac_ros_tensor_rt
@@ -121,30 +122,14 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'input_height': IMAGE_RESOLUTION['height'],
             'output_width': NETWORK_RESOLUTION['width'],
             'output_height': NETWORK_RESOLUTION['height'],
-            'keep_aspect_ratio': True,
+            'keep_aspect_ratio': False,
             'encoding_desired': 'rgb8',
-            'disable_padding': True
         }],
         remappings=[
             ('image', 'left/image_rect'),
             ('camera_info', 'left/camera_info_rect'),
             ('resize/image', 'left/image_resize'),
             ('resize/camera_info', 'left/camera_info_resize'),
-        ]
-    )
-    left_pad_node = ComposableNode(
-        name='left_pad_node',
-        namespace=TestIsaacROSFoundationStereoGraph.generate_namespace(),
-        package='isaac_ros_image_proc',
-        plugin='nvidia::isaac_ros::image_proc::PadNode',
-        parameters=[{
-            'output_image_width': NETWORK_RESOLUTION['width'],
-            'output_image_height': NETWORK_RESOLUTION['height'],
-            'border_type': 'REPLICATE'
-        }],
-        remappings=[
-            ('image', 'left/image_resize'),
-            ('padded_image', 'left/image_pad'),
         ]
     )
     left_format_node = ComposableNode(
@@ -158,7 +143,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'encoding_desired': 'rgb8',
         }],
         remappings=[
-            ('image_raw', 'left/image_pad'),
+            ('image_raw', 'left/image_resize'),
             ('image', 'left/image_rgb')
         ]
     )
@@ -234,30 +219,14 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'input_height': IMAGE_RESOLUTION['height'],
             'output_width': NETWORK_RESOLUTION['width'],
             'output_height': NETWORK_RESOLUTION['height'],
-            'keep_aspect_ratio': True,
+            'keep_aspect_ratio': False,
             'encoding_desired': 'rgb8',
-            'disable_padding': True
         }],
         remappings=[
             ('image', 'right/image_rect'),
             ('camera_info', 'right/camera_info_rect'),
             ('resize/image', 'right/image_resize'),
             ('resize/camera_info', 'right/camera_info_resize'),
-        ]
-    )
-    right_pad_node = ComposableNode(
-        name='right_pad_node',
-        namespace=TestIsaacROSFoundationStereoGraph.generate_namespace(),
-        package='isaac_ros_image_proc',
-        plugin='nvidia::isaac_ros::image_proc::PadNode',
-        parameters=[{
-            'output_image_width': NETWORK_RESOLUTION['width'],
-            'output_image_height': NETWORK_RESOLUTION['height'],
-            'border_type': 'REPLICATE'
-        }],
-        remappings=[
-            ('image', 'right/image_resize'),
-            ('padded_image', 'right/image_pad'),
         ]
     )
     right_format_node = ComposableNode(
@@ -271,7 +240,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'encoding_desired': 'rgb8',
         }],
         remappings=[
-            ('image_raw', 'right/image_pad'),
+            ('image_raw', 'right/image_resize'),
             ('image', 'right/image_rgb')
         ]
     )
@@ -372,13 +341,15 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     )
 
     # Disparity decoder node
-    foundationstereo_decoder_node = ComposableNode(
-        name='foundationstereo_decoder',
+    dnn_stereo_decoder_node = ComposableNode(
+        name='dnn_stereo_decoder',
         namespace=TestIsaacROSFoundationStereoGraph.generate_namespace(),
-        package='isaac_ros_foundationstereo',
-        plugin='nvidia::isaac_ros::dnn_stereo_depth::FoundationStereoDecoderNode',
+        package='isaac_ros_dnn_stereo_decoder',
+        plugin='nvidia::isaac_ros::dnn_stereo_depth::DNNStereoDecoderNode',
         parameters=[{
-            'disparity_tensor_name': 'disparity'
+            'disparity_tensor_name': 'disparity',
+            'cache_camera_info': True,
+            'reusable_buffer_enable': False,
         }],
         remappings=[
             ('right/camera_info', 'right/camera_info_resize')
@@ -396,7 +367,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'use_color': False,
             'use_system_default_qos': True,
         }],
-        remappings=[('left/image_rect_color', 'left/image_pad'),
+        remappings=[('left/image_rect_color', 'left/image_resize'),
                     ('left/camera_info', 'left/camera_info_resize'),
                     ('right/camera_info', 'right/camera_info_resize')])
 
@@ -412,14 +383,12 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             playback_node,
             monitor_node,
             left_resize_node,
-            left_pad_node,
             left_format_node,
             left_normalize_node,
             left_tensor_node,
             left_planar_node,
             left_reshape_node,
             right_resize_node,
-            right_pad_node,
             right_format_node,
             right_normalize_node,
             right_tensor_node,
@@ -427,7 +396,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             right_reshape_node,
             tensor_pair_sync_node,
             tensor_rt_node,
-            foundationstereo_decoder_node,
+            dnn_stereo_decoder_node,
             pointcloud_node
         ],
         output='screen',

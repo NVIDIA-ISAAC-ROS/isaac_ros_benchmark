@@ -53,7 +53,12 @@ class TaoConverter(Converter):
 class TRTConverter(Converter):
 
     def __init__(self):
+        self.trtexec_path = '/usr/src/tensorrt/bin/trtexec'
+        if os.environ.get('TENSORRT_COMMAND', None):
+            from python.runfiles import Runfiles
+            _bazel_runfiles = Runfiles.Create()
+            self.trtexec_path = _bazel_runfiles.Rlocation(os.environ['TENSORRT_COMMAND'])
         super(TRTConverter, self).__init__(
             'trt-converter',
-            '/usr/src/tensorrt/bin/trtexec'
+            self.trtexec_path
         )

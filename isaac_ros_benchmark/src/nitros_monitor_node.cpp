@@ -208,35 +208,39 @@ void NitrosMonitorNode::NitrosTypeMonitorSubscriberCallback(
     return;
   }
 
-  uint32_t timestamp_key;
-  if (revise_timestamps_as_message_ids_) {
+  uint32_t timestamp_sec = 0;
+  uint32_t timestamp_nsec = 0;
+  bool timestamp_valid = false;
+
+  if (msg_base.handle < 0) {
+    timestamp_sec = msg_base.get_timestamp_sec();
+    timestamp_nsec = msg_base.get_timestamp_nsec();
+    timestamp_valid = true;
+  } else {
     std_msgs::msg::Header ros_header;
     if (nvidia::isaac_ros::nitros::GetTypeAdapterNitrosContext().getEntityTimestamp(
-        msg_base.handle, ros_header) != GXF_SUCCESS)
+        msg_base.handle, ros_header) == GXF_SUCCESS)
     {
-      RCLCPP_ERROR(
-        get_logger(),
-        "[NitrosMonitorNode] getEntityTimestamp Error");
+      timestamp_sec = ros_header.stamp.sec;
+      timestamp_nsec = ros_header.stamp.nanosec;
+      timestamp_valid = true;
+    } else {
+      RCLCPP_ERROR(get_logger(), "[NitrosMonitorNode] getEntityTimestamp Error");
     }
-    timestamp_key = ros_header.stamp.sec;
+  }
+
+  uint32_t timestamp_key;
+  if (revise_timestamps_as_message_ids_) {
+    timestamp_key = timestamp_sec;
   } else {
     timestamp_key = end_timestamps_.size();
   }
 
-  if (record_start_timestamps_) {
-    std_msgs::msg::Header ros_header;
-    if (nvidia::isaac_ros::nitros::GetTypeAdapterNitrosContext().getEntityTimestamp(
-        msg_base.handle, ros_header) != GXF_SUCCESS)
-    {
-      RCLCPP_ERROR(
-        get_logger(),
-        "[NitrosMonitorNode] getEntityTimestamp Error");
-    } else {
-      std::chrono::time_point<std::chrono::system_clock> start_timestamp(
-        std::chrono::seconds(ros_header.stamp.sec) +
-        std::chrono::nanoseconds(ros_header.stamp.nanosec));
-      RecordStartTimestamp(timestamp_key, start_timestamp);
-    }
+  if (record_start_timestamps_ && timestamp_valid) {
+    std::chrono::time_point<std::chrono::system_clock> start_timestamp(
+      std::chrono::seconds(timestamp_sec) +
+      std::chrono::nanoseconds(timestamp_nsec));
+    RecordStartTimestamp(timestamp_key, start_timestamp);
   }
   RecordEndTimestamp(timestamp_key);
 }

@@ -108,6 +108,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'image_input_topic': 'data_loader/image',
             'camera_info_input_topic': 'data_loader/camera_info',
             'tensor_output_topic': 'buffer/input',
+            'tensor_name': 'input_tensor',
             'attach_to_shared_component_container': 'True',
             'component_container_name':
                 f'{TestIsaacROSTritonNode.generate_namespace()}/triton_container',

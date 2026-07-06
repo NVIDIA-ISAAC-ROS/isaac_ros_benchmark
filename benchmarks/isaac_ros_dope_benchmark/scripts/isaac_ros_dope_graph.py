@@ -71,6 +71,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'network_image_height': str(NETWORK_RESOLUTION['height']),
             'encoding_desired': 'rgb8',
             'tensor_output_topic': 'tensor_pub',
+            'tensor_name': 'input_tensor',
             'attach_to_shared_component_container': 'True',
             'component_container_name': f'{dnn_image_encoder_namespace}/container',
             'dnn_image_encoder_namespace': dnn_image_encoder_namespace,

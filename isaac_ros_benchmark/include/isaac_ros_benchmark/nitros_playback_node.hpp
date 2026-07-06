@@ -77,7 +77,7 @@ private:
 
   /// A NITROS subscriber callback function for recording the received messages.
   void NitrosTypeRecordingSubscriberCallback(
-    nvidia::isaac_ros::nitros::NitrosTypeBase & msg_base,
+    std::shared_ptr<nvidia::isaac_ros::nitros::NitrosTypeBase> msg_base,
     std::string data_format_name,
     size_t buffer_index);
 
@@ -94,7 +94,9 @@ private:
   std::unordered_map<size_t, NitrosPlaybackNodePubSubType> data_format_pub_sub_types_;
 
   /// Buffers for storing NITROS-typed data.
-  std::unordered_map<size_t, std::vector<nvidia::isaac_ros::nitros::NitrosTypeBase>>
+  /// Using shared_ptr to avoid object slicing when storing derived types
+  std::unordered_map<size_t,
+    std::vector<std::shared_ptr<nvidia::isaac_ros::nitros::NitrosTypeBase>>>
   nitros_msg_buffers_{};
 
   /// NITROS publishers that publish the buffered NITROS-typed messages (converted

@@ -95,13 +95,29 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         parameters=[{
             'mesh_file_path': MESH_FILE_PATH,
             'texture_path': TEXTURE_MAP_PATH,
-            'refine_engine_file_path': REFINE_ENGINE_PATH,
             'refine_input_tensor_names': ['input_tensor1', 'input_tensor2'],
-            'refine_input_binding_names': ['input1', 'input2'],
-            'refine_output_tensor_names': ['output_tensor1', 'output_tensor2'],
-            'refine_output_binding_names': ['output1', 'output2'],
-        }]
-    )
+        }],
+        remappings=[])
+
+    tracking_refine_trt_node = ComposableNode(
+        name='TrackingRefineTRTNode',
+        namespace=TestIsaacROSFoundationPoseGraph.generate_namespace(),
+        package='isaac_ros_tensor_rt',
+        plugin='nvidia::isaac_ros::dnn_inference::TensorRTNode',
+        parameters=[{
+            'engine_file_path': REFINE_ENGINE_PATH,
+            'input_tensor_names': ['input_tensor1', 'input_tensor2'],
+            'input_binding_names': ['input1', 'input2'],
+            'output_tensor_names': ['output_tensor1', 'output_tensor2'],
+            'output_binding_names': ['output1', 'output2'],
+            'force_engine_update': False,
+            'verbose': False,
+            'max_batch_size': 1,
+        }],
+        remappings=[
+            ('tensor_pub', 'tracking_refine/tensor_pub'),
+            ('tensor_sub', 'tracking_refine/tensor_sub'),
+        ])
 
     data_loader_node = ComposableNode(
         name='DataLoaderNode',
@@ -302,16 +318,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         parameters=[{
             'mesh_file_path': MESH_FILE_PATH,
             'texture_path': TEXTURE_MAP_PATH,
-            'refine_engine_file_path': REFINE_ENGINE_PATH,
             'refine_input_tensor_names': ['input_tensor1', 'input_tensor2'],
-            'refine_input_binding_names': ['input1', 'input2'],
-            'refine_output_tensor_names': ['output_tensor1', 'output_tensor2'],
-            'refine_output_binding_names': ['output1', 'output2'],
-            'score_engine_file_path': SCORE_ENGINE_PATH,
             'score_input_tensor_names': ['input_tensor1', 'input_tensor2'],
-            'score_input_binding_names': ['input1', 'input2'],
-            'score_output_tensor_names': ['output_tensor'],
-            'score_output_binding_names': ['output1'],
         }],
         remappings=[
             ('pose_estimation/depth_image', 'depth_image_32fc1'),
@@ -322,6 +330,46 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         ]
     )
 
+    prep_refine_trt_node = ComposableNode(
+        name='PrepRefineTRTNode',
+        namespace=TestIsaacROSFoundationPoseGraph.generate_namespace(),
+        package='isaac_ros_tensor_rt',
+        plugin='nvidia::isaac_ros::dnn_inference::TensorRTNode',
+        parameters=[{
+            'engine_file_path': REFINE_ENGINE_PATH,
+            'input_tensor_names': ['input_tensor1', 'input_tensor2'],
+            'input_binding_names': ['input1', 'input2'],
+            'output_tensor_names': ['output_tensor1', 'output_tensor2'],
+            'output_binding_names': ['output1', 'output2'],
+            'force_engine_update': False,
+            'verbose': False,
+            'max_batch_size': 42,
+        }],
+        remappings=[
+            ('tensor_pub', 'refine/tensor_pub'),
+            ('tensor_sub', 'refine/tensor_sub'),
+        ])
+
+    prep_score_trt_node = ComposableNode(
+        name='PrepScoreTRTNode',
+        namespace=TestIsaacROSFoundationPoseGraph.generate_namespace(),
+        package='isaac_ros_tensor_rt',
+        plugin='nvidia::isaac_ros::dnn_inference::TensorRTNode',
+        parameters=[{
+            'engine_file_path': SCORE_ENGINE_PATH,
+            'input_tensor_names': ['input_tensor1', 'input_tensor2'],
+            'input_binding_names': ['input1', 'input2'],
+            'output_tensor_names': ['output_tensor'],
+            'output_binding_names': ['output1'],
+            'force_engine_update': False,
+            'verbose': False,
+            'max_batch_size': 252,
+        }],
+        remappings=[
+            ('tensor_pub', 'score/tensor_pub'),
+            ('tensor_sub', 'score/tensor_sub'),
+        ])
+
     playback_node = ComposableNode(
         name='PlaybackNode',
         namespace=TestIsaacROSFoundationPoseGraph.generate_namespace(),
@@ -330,7 +378,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         parameters=[{
             'data_formats': [
                 'nitros_image_32FC1', 'nitros_image_rgb8', 'nitros_camera_info',
-                'nitros_tensor_list_nchw'
+                'nitros_tensor_list_nchw',
             ],
         }],
         remappings=[
@@ -348,11 +396,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     monitor_node = ComposableNode(
         name='MonitorNode',
         namespace=TestIsaacROSFoundationPoseGraph.generate_namespace(),
-        package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        package='ros2_benchmark',
+        plugin='ros2_benchmark::MonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_detection3_d_array',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'vision_msgs/msg/Detection3DArray',
         }],
         remappings=[('output', 'tracking/output')],
     )
@@ -365,7 +412,6 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         prefix=container_prefix,
         sigterm_timeout=container_sigterm_timeout,
         composable_node_descriptions=[
-            data_loader_node,
             prep_convert_metric_node,
             prep_resize_left_rt_detr_node,
             prep_image_to_tensor_node, prep_pad_node, prep_reshape_node,
@@ -373,9 +419,14 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             prep_rtdetr_tensor_rt_node, prep_rtdetr_decoder_node,
             prep_detection2d_filter_node,
             prep_detection2d_to_mask_node,
-            prep_resize_mask_node, prep_foundationpose_node,
-            playback_node,
+            prep_resize_mask_node,
+            prep_refine_trt_node,
+            prep_score_trt_node,
+            prep_foundationpose_node,
+            tracking_refine_trt_node,
             foundationpose_tracking_node,
+            data_loader_node,
+            playback_node,
             monitor_node,
         ],
         output='screen')
@@ -452,11 +503,13 @@ class TestIsaacROSFoundationPoseGraph(ROS2BenchmarkTest):
         publisher_upper_frequency=300.0,
         publisher_lower_frequency=1.0,
         benchmark_duration=5,
+        # Playback probes can run for benchmark_duration seconds; keep future timeout above that.
+        play_messages_service_future_timeout_sec=60.0,
         # The number of frames to be buffered
         playback_message_buffer_size=1,
         custom_report_info={'data_resolution': IMAGE_RESOLUTION})
 
-    # Amount of seconds to wait for TensorRT Engine to be initialized
+    # Amount of seconds to wait for TRT Engine to be initialized
     ENGINE_WAIT_SEC = 10
 
     def pre_benchmark_hook(self):

@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>isaac_ros_foundationpose_benchmark</name>
-  <version>4.4.0</version>
+  <version>4.5.0</version>
   <description>Scripts for benchmarking Isaac ROS FoundationPose graphs</description>
 
   <maintainer email="isaac-ros-maintainers@nvidia.com">Isaac ROS Maintainers</maintainer>
@@ -37,8 +37,6 @@ SPDX-License-Identifier: Apache-2.0
   <depend>isaac_ros_benchmark</depend>
   <depend>isaac_ros_foundationpose</depend>
   <depend>isaac_ros_image_proc</depend>
-  <depend>isaac_ros_ess</depend>
-  <depend>isaac_ros_ess_benchmark</depend>
   <depend>isaac_ros_stereo_image_proc</depend>
   <depend>isaac_ros_rtdetr</depend>
 

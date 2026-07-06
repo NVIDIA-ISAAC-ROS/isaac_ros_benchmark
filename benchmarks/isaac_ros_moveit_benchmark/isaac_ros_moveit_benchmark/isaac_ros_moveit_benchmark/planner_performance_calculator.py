@@ -21,8 +21,6 @@ from enum import Enum
 
 import numbers
 
-from curobo.types.state import JointState as cuJointState
-
 from moveit_msgs.msg import MoveItErrorCodes
 
 import numpy
@@ -117,39 +115,30 @@ class PlannerPerformanceCalculator():
 
             q_traj = [p.positions for p in
                       planner_response.planned_trajectory.joint_trajectory.points]
-            q_traj_vel = [p.velocities for p in
-                          planner_response.planned_trajectory.joint_trajectory.points]
-            q_traj_acc = [p.accelerations for p in
-                          planner_response.planned_trajectory.joint_trajectory.points]
 
-            js = cuJointState(position=torch.as_tensor(q_traj, device='cuda'),
-                              velocity=torch.as_tensor(q_traj_vel, device='cuda'),
-                              acceleration=torch.as_tensor(q_traj_acc, device='cuda'))
+            q_position = torch.as_tensor(q_traj, device='cuda')
             path_length_t = torch.sum(
                 torch.linalg.norm(
-                    (torch.roll(js.position, -1, dims=-2) - js.position)[..., :-1, :], dim=-1,
+                    (torch.roll(q_position, -1, dims=-2) - q_position)[..., :-1, :], dim=-1,
                 )
             )
             path_length.append(path_length_t.item())
 
-            dt_values = []
-            jerk_values = []
             max_jerk_limit = 500  # Set in joint_limits.yml
             times = numpy.array([p.time_from_start.sec + p.time_from_start.nanosec * 1e-9 for p in
                                  planner_response.planned_trajectory.joint_trajectory.points])
-            dt_values = numpy.diff(times)
-            dt_values = torch.tensor(dt_values, device='cuda')
-            q_traj_acc = numpy.array([p.accelerations for p in
-                                      planner_response.planned_trajectory.joint_trajectory.points])
-            q_traj_acc = torch.tensor(q_traj_acc, device='cuda')
+            dt_values = torch.tensor(numpy.diff(times), device='cuda')
+            q_traj_acc = torch.tensor(
+                numpy.array([p.accelerations for p in
+                             planner_response.planned_trajectory.joint_trajectory.points]),
+                device='cuda')
 
             jerk_values = (q_traj_acc[1:] - q_traj_acc[:-1]) / dt_values.unsqueeze(1)
             jerk_padded = torch.cat((torch.zeros(
                 1, len(planner_response.planned_trajectory.joint_trajectory.joint_names),
                 device='cuda'), jerk_values), dim=0)
-            js.jerk = jerk_padded
 
-            max_jerk = torch.max(torch.abs(js.jerk)).item()
+            max_jerk = torch.max(torch.abs(jerk_padded)).item()
 
             # Clamp until we find a solution to the last timestep dt mismatch across a trajectory
             if max_jerk > max_jerk_limit:

@@ -92,18 +92,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         parameters=[{
             'mesh_file_path': MESH_FILE_PATH,
             'texture_path': TEXTURE_MAP_PATH,
-
-            'refine_engine_file_path': REFINE_ENGINE_PATH,
             'refine_input_tensor_names': ['input_tensor1', 'input_tensor2'],
-            'refine_input_binding_names': ['input1', 'input2'],
-            'refine_output_tensor_names': ['output_tensor1', 'output_tensor2'],
-            'refine_output_binding_names': ['output1', 'output2'],
-
-            'score_engine_file_path': SCORE_ENGINE_PATH,
             'score_input_tensor_names': ['input_tensor1', 'input_tensor2'],
-            'score_input_binding_names': ['input1', 'input2'],
-            'score_output_tensor_names': ['output_tensor'],
-            'score_output_binding_names': ['output1'],
         }],
         remappings=[
             ('pose_estimation/depth_image', 'depth_registered/image_rect'),
@@ -113,6 +103,46 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             ('pose_estimation/output', 'output')
         ]
     )
+
+    refine_trt_node = ComposableNode(
+        name='RefineTRTNode',
+        namespace=TestIsaacROSFoundationPoseGraph.generate_namespace(),
+        package='isaac_ros_tensor_rt',
+        plugin='nvidia::isaac_ros::dnn_inference::TensorRTNode',
+        parameters=[{
+            'engine_file_path': REFINE_ENGINE_PATH,
+            'input_tensor_names': ['input_tensor1', 'input_tensor2'],
+            'input_binding_names': ['input1', 'input2'],
+            'output_tensor_names': ['output_tensor1', 'output_tensor2'],
+            'output_binding_names': ['output1', 'output2'],
+            'force_engine_update': False,
+            'verbose': False,
+            'max_batch_size': 42,
+        }],
+        remappings=[
+            ('tensor_pub', 'refine/tensor_pub'),
+            ('tensor_sub', 'refine/tensor_sub'),
+        ])
+
+    score_trt_node = ComposableNode(
+        name='ScoreTRTNode',
+        namespace=TestIsaacROSFoundationPoseGraph.generate_namespace(),
+        package='isaac_ros_tensor_rt',
+        plugin='nvidia::isaac_ros::dnn_inference::TensorRTNode',
+        parameters=[{
+            'engine_file_path': SCORE_ENGINE_PATH,
+            'input_tensor_names': ['input_tensor1', 'input_tensor2'],
+            'input_binding_names': ['input1', 'input2'],
+            'output_tensor_names': ['output_tensor'],
+            'output_binding_names': ['output1'],
+            'force_engine_update': False,
+            'verbose': False,
+            'max_batch_size': 252,
+        }],
+        remappings=[
+            ('tensor_pub', 'score/tensor_pub'),
+            ('tensor_sub', 'score/tensor_sub'),
+        ])
 
     data_loader_node = ComposableNode(
         name='DataLoaderNode',
@@ -338,11 +368,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     monitor_node = ComposableNode(
         name='MonitorNode',
         namespace=TestIsaacROSFoundationPoseGraph.generate_namespace(),
-        package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        package='ros2_benchmark',
+        plugin='ros2_benchmark::MonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_detection3_d_array',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'vision_msgs/msg/Detection3DArray',
         }],
         remappings=[
             ('output', 'output')],
@@ -368,10 +397,12 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             prep_detection2d_filter_node,
             prep_detection2d_to_mask_node,
             prep_resize_mask_node,
+            refine_trt_node,
+            score_trt_node,
+            foundationpose_node,
             data_loader_node,
             playback_node,
             monitor_node,
-            foundationpose_node
         ],
         output='screen'
     )
@@ -474,7 +505,6 @@ class TestIsaacROSFoundationPoseGraph(ROS2BenchmarkTest):
             print('Waiting for engine files to be generated')
             time.sleep(1)
 
-        # Wait for ESS Node to be launched
         time.sleep(self.TRT_WAIT_SEC)
 
     def test_benchmark(self):
