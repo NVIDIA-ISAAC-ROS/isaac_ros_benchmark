@@ -77,6 +77,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'image_mean': str([0.408, 0.447, 0.47]),
             'image_stddev': str([0.289, 0.274, 0.278]),
             'encoding_desired': 'rgb8',
+            'tensor_name': 'input_tensor',
             'tensor_output_topic': 'tensor_pub',
             'attach_to_shared_component_container': 'True',
             'component_container_name':

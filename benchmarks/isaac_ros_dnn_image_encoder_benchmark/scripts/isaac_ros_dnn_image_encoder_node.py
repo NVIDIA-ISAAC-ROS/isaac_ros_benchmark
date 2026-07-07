@@ -30,11 +30,6 @@ Required:
     - assets/datasets/r2b_dataset/r2b_hallway
 """
 
-import os
-
-from ament_index_python.packages import get_package_share_directory
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 from ros2_benchmark import Resolution, ROS2BenchmarkConfig, ROS2BenchmarkTest
@@ -46,24 +41,24 @@ INPUT_TENSOR_DIMENSIONS = [1, 3, IMAGE_RESOLUTION['width'], IMAGE_RESOLUTION['he
 
 def launch_setup(container_prefix, container_sigterm_timeout):
     """Generate launch description for benchmarking Isaac ROS DnnImageEncoderNode."""
-    encoder_dir = get_package_share_directory('isaac_ros_dnn_image_encoder')
-    encoder_node_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [os.path.join(encoder_dir, 'launch', 'dnn_image_encoder.launch.py')]
-        ),
-        launch_arguments={
-            'input_image_width': str(IMAGE_RESOLUTION['width']),
-            'input_image_height': str(IMAGE_RESOLUTION['height']),
-            'network_image_width': str(640),
-            'network_image_height': str(480),
-            'encoding_desired': 'bgr8',
-            'tensor_output_topic': 'output',
-            'attach_to_shared_component_container': 'True',
-            'component_container_name':
-                f'{TestIsaacROSDnnImageEncoderNode.generate_namespace()}/container',
+    dnn_image_encoder_node = ComposableNode(
+        name='dnn_image_encoder_node',
+        package='isaac_ros_dnn_image_encoder',
+        plugin='nvidia::isaac_ros::dnn_inference::DnnImageEncoderNode',
+        namespace=TestIsaacROSDnnImageEncoderNode.generate_namespace(),
+        parameters=[{
+            'input_image_width': 1920,
+            'input_image_height': 1080,
+            'network_image_width': 512,
+            'network_image_height': 512,
+            'input_encoding': 'bgr8',
+            'image_mean': [0.5, 0.5, 0.5],
+            'image_stddev': [0.5, 0.5, 0.5],
+            'enable_padding': True,
+            'tensor_output_topic': 'tensors',
             'dnn_image_encoder_namespace': TestIsaacROSDnnImageEncoderNode.generate_namespace(),
-        }.items(),
-    )
+        }],
+        remappings=[('image', 'image'), ('tensors', 'output')])
 
     data_loader_node = ComposableNode(
         name='DataLoaderNode',
@@ -109,6 +104,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         prefix=container_prefix,
         sigterm_timeout=container_sigterm_timeout,
         composable_node_descriptions=[
+            dnn_image_encoder_node,
             data_loader_node,
             playback_node,
             monitor_node,
@@ -116,7 +112,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         output='screen'
     )
 
-    return [composable_node_container, encoder_node_launch]
+    return [composable_node_container]
 
 
 def generate_test_description():

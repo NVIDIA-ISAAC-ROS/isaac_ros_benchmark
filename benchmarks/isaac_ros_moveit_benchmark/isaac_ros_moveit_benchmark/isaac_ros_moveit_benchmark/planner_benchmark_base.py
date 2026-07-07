@@ -22,9 +22,6 @@ from enum import Enum
 
 import time
 
-# CuRobo
-from curobo.geom.sdf.world import WorldConfig
-
 from geometry_msgs.msg import Pose, Transform
 
 from isaac_ros_moveit_benchmark.planner_performance_calculator import PlannerPerformanceCalculator
@@ -404,25 +401,24 @@ class TestPlanner(ROS2BenchmarkTest):
         }
 
         # Convert world to planning options
-        collision_objects = WorldConfig.from_dict(world).cuboid
         self._planning_options = PlanningOptions()
         self._planning_options.plan_only = True
         self._planning_options.planning_scene_diff.is_diff = False
-        for collision_object in collision_objects:
+        for name, data in world.get('cuboid', {}).items():
             collision_obj = CollisionObject()
             collision_obj.header.frame_id = 'world'
             collision_obj.operation = CollisionObject.ADD
-            collision_obj.id = collision_object.name
-            collision_obj.pose.position.x = float(collision_object.pose[0])
-            collision_obj.pose.position.y = float(collision_object.pose[1])
-            collision_obj.pose.position.z = float(collision_object.pose[2])
-            collision_obj.pose.orientation.w = float(collision_object.pose[3])
-            collision_obj.pose.orientation.x = float(collision_object.pose[4])
-            collision_obj.pose.orientation.y = float(collision_object.pose[5])
-            collision_obj.pose.orientation.z = float(collision_object.pose[6])
+            collision_obj.id = name
+            collision_obj.pose.position.x = float(data['pose'][0])
+            collision_obj.pose.position.y = float(data['pose'][1])
+            collision_obj.pose.position.z = float(data['pose'][2])
+            collision_obj.pose.orientation.w = float(data['pose'][3])
+            collision_obj.pose.orientation.x = float(data['pose'][4])
+            collision_obj.pose.orientation.y = float(data['pose'][5])
+            collision_obj.pose.orientation.z = float(data['pose'][6])
             solid_primitive = SolidPrimitive()
             solid_primitive.type = SolidPrimitive.BOX
-            solid_primitive.dimensions = collision_object.dims
+            solid_primitive.dimensions = data['dims']
             collision_obj.primitives.append(solid_primitive)
             self._planning_options.planning_scene_diff.world.collision_objects.append(
                 collision_obj)

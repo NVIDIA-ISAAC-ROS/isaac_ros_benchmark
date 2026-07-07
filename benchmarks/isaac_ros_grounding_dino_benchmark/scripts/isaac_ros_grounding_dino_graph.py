@@ -170,7 +170,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         package='isaac_ros_grounding_dino',
         plugin='nvidia::isaac_ros::grounding_dino::GroundingDinoPreprocessorNode',
         parameters=[{
-            'default_prompt': 'can.'
+            'default_prompt': 'can.',
+            'input_image_tensor_name': 'images',
         }],
         remappings=[
             ('image_tensor', 'reshaped_tensor')

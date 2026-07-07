@@ -21,13 +21,17 @@ The graph consists of the following:
 - Preprocessors:
     None
 - Graph under Test:
-    1. LeftResizeNode, RightResizeNode: resizes images to 960 x 576
-    2. ESSDisparityNode: creates disparity images from stereo pair
-    3. PointCloudNode: converts disparity to pointcloud
+    1. ImageFormatConverter, Resize, ImageNormalize, ImageToTensor, InterleavedToPlanar,
+       Reshape nodes: Turns raw images into appropriately-shaped tensors
+    2. TensorPairSyncNode: Syncs left and right tensors for TensorRT inference
+    3. TensorRTNode: Runs TensorRT inference
+    4. DNNStereoDecoderNode: Decodes disparity from TensorRT output
+    5. PointCloudNode: Converts disparity to pointcloud
 
 Required:
 - Packages:
     - isaac_ros_ess
+    - isaac_ros_dnn_stereo_decoder
     - isaac_ros_stereo_image_proc
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_hideaway
@@ -38,86 +42,32 @@ Required:
 import os
 import time
 
-from isaac_ros_ess.engine_generator import ESSEngineGenerator
+import isaac_ros_ess_benchmark.ess_model_utility as ess_model_utility
+
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
 from ros2_benchmark import ROS2BenchmarkConfig, ROS2BenchmarkTest
 
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_hideaway'
-MODEL_FILE_NAME = 'ess/ess.onnx'
-ENGINE_FILE_PATH = 'ess/ess.engine'
 NETWORK_WIDTH = 960
 NETWORK_HEIGHT = 576
 
 
 def launch_setup(container_prefix, container_sigterm_timeout):
     """Generate launch description for benchmarking Isaac ROS ESS graph."""
-    MODELS_ROOT = os.path.join(TestIsaacROSEssStereoGraph.get_assets_root_path(), 'models')
-    MODEL_ENGINE_PATH = os.path.join(MODELS_ROOT, ENGINE_FILE_PATH)
-    disparity_node = ComposableNode(
-        name='ESSDisparityNode',
-        namespace=TestIsaacROSEssStereoGraph.generate_namespace(),
-        package='isaac_ros_ess',
-        plugin='nvidia::isaac_ros::dnn_stereo_depth::ESSDisparityNode',
-        parameters=[{'engine_file_path': MODEL_ENGINE_PATH}],
-        remappings=[
-            ('left/camera_info', 'left/camera_info_resize'),
-            ('left/image_rect', 'left/image_rect_resize'),
-            ('right/camera_info', 'right/camera_info_resize'),
-            ('right/image_rect', 'right/image_rect_resize')
-        ]
-    )
+    asset_models_path = os.path.join(TestIsaacROSEssStereoGraph.get_assets_root_path(), 'models')
+    _, engine_file_path = ess_model_utility.get_model_paths('full', asset_models_path)
+    ess_plugin_path = ess_model_utility.get_plugin_path(asset_models_path)
 
-    image_resize_node_left = ComposableNode(
-        name='LeftResizeNode',
-        namespace=TestIsaacROSEssStereoGraph.generate_namespace(),
-        package='isaac_ros_image_proc',
-        plugin='nvidia::isaac_ros::image_proc::ResizeNode',
-        parameters=[{
-                'output_width': NETWORK_WIDTH,
-                'output_height': NETWORK_HEIGHT,
-                'keep_aspect_ratio': True
-        }],
-        remappings=[
-            ('camera_info', 'left/camera_info'),
-            ('image', 'left/image_rect'),
-            ('resize/camera_info', 'left/camera_info_resize'),
-            ('resize/image', 'left/image_rect_resize')]
-    )
+    namespace = TestIsaacROSEssStereoGraph.generate_namespace()
 
-    image_resize_node_right = ComposableNode(
-        name='RightResizeNode',
-        namespace=TestIsaacROSEssStereoGraph.generate_namespace(),
-        package='isaac_ros_image_proc',
-        plugin='nvidia::isaac_ros::image_proc::ResizeNode',
-        parameters=[{
-                'output_width': NETWORK_WIDTH,
-                'output_height': NETWORK_HEIGHT,
-                'keep_aspect_ratio': True
-        }],
-        remappings=[
-            ('camera_info', 'right/camera_info'),
-            ('image', 'right/image_rect'),
-            ('resize/camera_info', 'right/camera_info_resize'),
-            ('resize/image', 'right/image_rect_resize')]
-    )
-
-    pointcloud_node = ComposableNode(
-        name='PointCloudNode',
-        namespace=TestIsaacROSEssStereoGraph.generate_namespace(),
-        package='isaac_ros_stereo_image_proc',
-        plugin='nvidia::isaac_ros::stereo_image_proc::PointCloudNode',
-        parameters=[{
-                'approximate_sync': False,
-                'use_color': False,
-                'use_system_default_qos': True,
-        }],
-        remappings=[('left/image_rect_color', 'left/image_rect_resize')])
+    pipeline_nodes = ess_model_utility.create_ess_pipeline_nodes(
+        namespace, NETWORK_WIDTH, NETWORK_HEIGHT, engine_file_path, ess_plugin_path)
 
     data_loader_node = ComposableNode(
         name='DataLoaderNode',
-        namespace=TestIsaacROSEssStereoGraph.generate_namespace(),
+        namespace=namespace,
         package='ros2_benchmark',
         plugin='ros2_benchmark::DataLoaderNode',
         remappings=[('hawk_0_left_rgb_image', 'data_loader/left_image'),
@@ -128,7 +78,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
 
     playback_node = ComposableNode(
         name='PlaybackNode',
-        namespace=TestIsaacROSEssStereoGraph.generate_namespace(),
+        namespace=namespace,
         package='isaac_ros_benchmark',
         plugin='isaac_ros_benchmark::NitrosPlaybackNode',
         parameters=[{
@@ -142,29 +92,45 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         remappings=[('buffer/input0', 'data_loader/left_image'),
                     ('input0', 'left/image_rect'),
                     ('buffer/input1', 'data_loader/left_camera_info'),
-                    ('input1', 'left/camera_info'),
+                    ('input1', 'left/camera_info_rect'),
                     ('buffer/input2', 'data_loader/right_image'),
                     ('input2', 'right/image_rect'),
                     ('buffer/input3', 'data_loader/right_camera_info'),
-                    ('input3', 'right/camera_info')]
+                    ('input3', 'right/camera_info_rect')]
     )
 
     monitor_node = ComposableNode(
         name='MonitorNode',
-        namespace=TestIsaacROSEssStereoGraph.generate_namespace(),
+        namespace=namespace,
         package='isaac_ros_benchmark',
         plugin='isaac_ros_benchmark::NitrosMonitorNode',
         parameters=[{
             'monitor_data_format': 'nitros_point_cloud',
             'use_nitros_type_monitor_sub': True,
         }],
+        remappings=[('output', 'points2')],
+    )
+
+    pointcloud_node = ComposableNode(
+        name='PointCloudNode',
+        namespace=namespace,
+        package='isaac_ros_stereo_image_proc',
+        plugin='nvidia::isaac_ros::stereo_image_proc::PointCloudNode',
+        parameters=[{
+            'approximate_sync': False,
+            'use_color': False,
+            'use_system_default_qos': True,
+        }],
         remappings=[
-            ('output', 'points2')],
+            ('left/image_rect_color', 'left/image_resize'),
+            ('left/camera_info', 'left/camera_info_resize'),
+            ('right/camera_info', 'right/camera_info_resize'),
+        ]
     )
 
     composable_node_container = ComposableNodeContainer(
         name='ess_disparity_container',
-        namespace=TestIsaacROSEssStereoGraph.generate_namespace(),
+        namespace=namespace,
         package='rclcpp_components',
         executable='component_container_mt',
         prefix=container_prefix,
@@ -173,10 +139,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             data_loader_node,
             playback_node,
             monitor_node,
-            disparity_node,
+            *pipeline_nodes,
             pointcloud_node,
-            image_resize_node_left,
-            image_resize_node_right
         ],
         output='screen',
     )
@@ -185,13 +149,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
 
 
 def generate_test_description():
-    MODELS_ROOT = os.path.join(TestIsaacROSEssStereoGraph.get_assets_root_path(), 'models')
-    MODEL_FILE_PATH = os.path.join(MODELS_ROOT, MODEL_FILE_NAME)
-
-    # Generate engine file using trtexec
-    if not os.path.isfile(os.path.join(MODELS_ROOT, ENGINE_FILE_PATH)):
-        gen = ESSEngineGenerator(onnx_model=MODEL_FILE_PATH)
-        gen.generate()
+    asset_models_path = os.path.join(TestIsaacROSEssStereoGraph.get_assets_root_path(), 'models')
+    ess_model_utility.generate_ess_engine_file('full', asset_models_path)
     return TestIsaacROSEssStereoGraph.generate_test_description_with_nsys(launch_setup)
 
 
@@ -206,19 +165,21 @@ class TestIsaacROSEssStereoGraph(ROS2BenchmarkTest):
         publisher_upper_frequency=350.0,
         publisher_lower_frequency=10.0,
         # The number of frames to be buffered
-        playback_message_buffer_size=10
+        playback_message_buffer_size=10,
+        pre_trial_run_wait_time_sec=5.0,
     )
 
-    # Amount of seconds to wait for Triton Engine to be initialized
+    # Amount of seconds to wait for ESS engine to be initialized
     ESS_WAIT_SEC = 10
 
     def pre_benchmark_hook(self):
         # Wait for model to be generated
-        # Note that the model engine file exist only if previous model conversion succeeds.
-        # Note that if the model is failed to be converted, an exception will be raised and
+        # Note that the model engine file exists only if previous model conversion succeeds.
+        # Note that if the model fails to be converted, an exception will be raised and
         # the entire test will end.
-        MODELS_ROOT = os.path.join(TestIsaacROSEssStereoGraph.get_assets_root_path(), 'models')
-        while not os.path.isfile(os.path.join(MODELS_ROOT, ENGINE_FILE_PATH)):
+        asset_models_path = os.path.join(
+            TestIsaacROSEssStereoGraph.get_assets_root_path(), 'models')
+        while not ess_model_utility.is_ess_engine_file_generated('full', asset_models_path):
             time.sleep(1)
         # Wait for ESS Node to be launched
         time.sleep(self.ESS_WAIT_SEC)

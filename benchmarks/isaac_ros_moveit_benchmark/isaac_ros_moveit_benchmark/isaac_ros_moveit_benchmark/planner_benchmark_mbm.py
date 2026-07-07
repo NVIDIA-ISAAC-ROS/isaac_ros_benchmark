@@ -16,8 +16,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from typing import Any, Dict, List
 
-from curobo.geom.sdf.world import WorldConfig
-
 from isaac_ros_moveit_benchmark.mbm_loader import MBMLoader
 from isaac_ros_moveit_benchmark.planner_benchmark_base import TestPlanner
 from isaac_ros_moveit_benchmark.planner_performance_calculator import PlannerPerformanceCalculator
@@ -136,26 +134,35 @@ class TestPlannerMBM(TestPlanner):
             'pose': [0.0, 0.0, -0.45, 1, 0, 0, 0.0]
         }
 
-        collision_objects = WorldConfig.from_dict(
-            problem['obstacles']).get_obb_world()
+        # Collect all obstacles as bounding boxes for collision checking.
+        # Cuboids pass through directly; cylinders are converted to their
+        # oriented bounding box (dims = [2*radius, 2*radius, height]).
+        obstacles_as_boxes = []
+        for name, data in problem['obstacles'].get('cuboid', {}).items():
+            obstacles_as_boxes.append((name, data['dims'], data['pose']))
+        for name, data in problem['obstacles'].get('cylinder', {}).items():
+            r = data['radius']
+            obstacles_as_boxes.append(
+                (name, [2.0 * r, 2.0 * r, data['height']], data['pose']))
+
         self._planning_options = PlanningOptions()
         self._planning_options.plan_only = True
         self._planning_options.planning_scene_diff.is_diff = False
-        for collision_object in collision_objects:
+        for name, dims, pose in obstacles_as_boxes:
             collision_obj = CollisionObject()
             collision_obj.header.frame_id = 'world'
             collision_obj.operation = CollisionObject.ADD
-            collision_obj.id = collision_object.name
-            collision_obj.pose.position.x = float(collision_object.pose[0])
-            collision_obj.pose.position.y = float(collision_object.pose[1])
-            collision_obj.pose.position.z = float(collision_object.pose[2])
-            collision_obj.pose.orientation.w = float(collision_object.pose[3])
-            collision_obj.pose.orientation.x = float(collision_object.pose[4])
-            collision_obj.pose.orientation.y = float(collision_object.pose[5])
-            collision_obj.pose.orientation.z = float(collision_object.pose[6])
+            collision_obj.id = name
+            collision_obj.pose.position.x = float(pose[0])
+            collision_obj.pose.position.y = float(pose[1])
+            collision_obj.pose.position.z = float(pose[2])
+            collision_obj.pose.orientation.w = float(pose[3])
+            collision_obj.pose.orientation.x = float(pose[4])
+            collision_obj.pose.orientation.y = float(pose[5])
+            collision_obj.pose.orientation.z = float(pose[6])
             solid_primitive = SolidPrimitive()
             solid_primitive.type = SolidPrimitive.BOX
-            solid_primitive.dimensions = collision_object.dims
+            solid_primitive.dimensions = dims
             collision_obj.primitives.append(solid_primitive)
             self._planning_options.planning_scene_diff.world.collision_objects.append(
                 collision_obj)

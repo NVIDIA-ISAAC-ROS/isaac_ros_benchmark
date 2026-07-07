@@ -85,6 +85,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'network_image_height': str(NETWORK_RESOLUTION['height']),
             'encoding_desired': 'rgb8',
             'tensor_output_topic': 'tensor_pub',
+            'tensor_name': 'input_tensor',
             'attach_to_shared_component_container': 'True',
             'component_container_name': f'{TesetIsaacROSDetectNet.generate_namespace()}/container',
             'dnn_image_encoder_namespace': TesetIsaacROSDetectNet.generate_namespace(),
@@ -189,8 +190,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
 
 def generate_test_description():
     MODELS_ROOT = os.path.join(TesetIsaacROSDetectNet.get_assets_root_path(), 'models')
-    if not os.path.exists(os.path.dirname(ENGINE_FILE_PATH)):
-        os.makedirs(os.path.dirname(ENGINE_FILE_PATH))
+    if os.path.exists(ENGINE_FILE_DIR):
+        shutil.rmtree(ENGINE_FILE_DIR)
+    os.makedirs(os.path.dirname(ENGINE_FILE_PATH), exist_ok=True)
     shutil.copy(
         os.path.join(MODELS_ROOT, MODEL_CONFIG_FILE_NAME),
         ENGINE_FILE_DIR)

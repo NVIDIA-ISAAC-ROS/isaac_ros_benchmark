@@ -142,7 +142,7 @@ void NitrosPlaybackNode::CreateNitrosPubSub(
     throw std::runtime_error(error_msg.str().c_str());
   }
 
-  std::function<void(nvidia::isaac_ros::nitros::NitrosTypeBase &, const std::string)>
+  std::function<void(std::shared_ptr<nvidia::isaac_ros::nitros::NitrosTypeBase>, const std::string)>
   subscriber_callback =
     std::bind(
     &NitrosPlaybackNode::NitrosTypeRecordingSubscriberCallback,
@@ -167,7 +167,8 @@ void NitrosPlaybackNode::CreateNitrosPubSub(
     sub->get_topic_name());
 
   // Create a NITROS message buffer
-  nitros_msg_buffers_[index] = std::vector<nvidia::isaac_ros::nitros::NitrosTypeBase>();
+  nitros_msg_buffers_[index] =
+    std::vector<std::shared_ptr<nvidia::isaac_ros::nitros::NitrosTypeBase>>();
 }
 
 bool NitrosPlaybackNode::AreBuffersFull() const
@@ -258,7 +259,10 @@ bool NitrosPlaybackNode::PublishMessage(
           message_index, pub_index, buffer_size);
         return false;
       }
-      auto nitros_type_msg = nitros_msg_buffers_[pub_index].at(message_index);
+      auto nitros_type_msg_ptr = nitros_msg_buffers_[pub_index].at(message_index);
+      // Dereference shared_ptr to get reference for publishing
+      // The actual object is the full derived type (NitrosImage, etc.)
+      auto & nitros_type_msg = *nitros_type_msg_ptr;
       if (header) {
         nitros_pubs_[pub_index]->publish(nitros_type_msg, *header);
       } else {
@@ -270,7 +274,7 @@ bool NitrosPlaybackNode::PublishMessage(
 }
 
 void NitrosPlaybackNode::NitrosTypeRecordingSubscriberCallback(
-  nvidia::isaac_ros::nitros::NitrosTypeBase & msg_base,
+  std::shared_ptr<nvidia::isaac_ros::nitros::NitrosTypeBase> msg_base,
   std::string data_format_name,
   size_t buffer_index)
 {
@@ -282,8 +286,12 @@ void NitrosPlaybackNode::NitrosTypeRecordingSubscriberCallback(
     RCLCPP_DEBUG(get_logger(), "[NitrosPlaybackNode] Dropped a message due to a full buffer");
     return;
   }
-  // Add received Nitros-typed message to internal buffer
+
+  // Store shared_ptr directly - no copy, no slicing!
+  // The shared_ptr points to the full derived type (NitrosImage, etc.)
+  // All members including buffer_, width, height preserved
   nitros_msg_buffers_[buffer_index].push_back(msg_base);
+
   RCLCPP_DEBUG(
     get_logger(), "[NitrosPlaybackNode] Added a message to the buffer (%ld/%ld)",
     nitros_msg_buffers_[buffer_index].size(), requested_buffer_length_);
