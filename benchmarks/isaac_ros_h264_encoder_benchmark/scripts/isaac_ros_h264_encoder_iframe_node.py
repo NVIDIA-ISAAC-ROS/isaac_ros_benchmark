@@ -135,7 +135,7 @@ class TestIsaacROSEncoderNode(ROS2BenchmarkTest):
         benchmark_name='Isaac ROS EncoderNode (I-Frame) Benchmark',
         input_data_path=ROSBAG_PATH,
         # Upper and lower bounds of peak throughput search window
-        publisher_upper_frequency=600.0,
+        publisher_upper_frequency=2000.0,
         publisher_lower_frequency=10.0,
         # The number of frames to be buffered
         playback_message_buffer_size=1,

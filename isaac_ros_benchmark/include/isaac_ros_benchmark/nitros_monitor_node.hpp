@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
-// Copyright (c) 2023-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// Copyright (c) 2023-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,17 +18,12 @@
 #ifndef ISAAC_ROS_BENCHMARK__NITROS_MONITOR_NODE_HPP_
 #define ISAAC_ROS_BENCHMARK__NITROS_MONITOR_NODE_HPP_
 
-#include <map>
 #include <memory>
 #include <string>
 
 #include "ros2_benchmark/monitor_node.hpp"
 
 #include "rclcpp/rclcpp.hpp"
-
-#include "isaac_ros_nitros/nitros_subscriber.hpp"
-#include "isaac_ros_nitros/types/nitros_type_base.hpp"
-#include "isaac_ros_nitros/types/nitros_type_manager.hpp"
 
 namespace isaac_ros_benchmark
 {
@@ -46,28 +41,20 @@ private:
   template<typename T>
   void CreateROSTypeMonitorSubscriber();
 
-  /// Create a NITROS type monitor subscriber.
-  void CreateNitrosMonitorSubscriber();
+  /// Subscriber callback function for the NITROS type message monitor (that adds
+  /// end timestamps).
+  void OnNitrosTimestamp(uint32_t timestamp_sec, uint32_t timestamp_nsec);
 
   /// Subscriber callback function for the ROS type message monitor (that adds
   /// end timestamps.)
   template<typename T>
   void ROSTypeMonitorSubscriberCallback(const std::shared_ptr<T> msg);
 
-  /// Subscriber callback function for the Nitros type message monitor (that adds
-  /// end timestamps.)
-  void NitrosTypeMonitorSubscriberCallback(
-    const gxf_context_t,
-    nvidia::isaac_ros::nitros::NitrosTypeBase & msg_base);
-
-  /// The monitor subscriber should subscriber to a Nitros type or a ROS message type.
+  /// The monitor subscriber should subscribe to a NITROS type or a ROS message
+  /// type. If true, subscribes via the rclcpp TypeAdapter (zero-copy with the
+  /// underlying NITROS C++ type). If false (or the data format is unknown), falls
+  /// back to the ROS type subscription path or the generic serialized path.
   bool use_nitros_type_monitor_sub_{true};
-
-  // Nitros subscriber for monitoring incoming NITROS type messages
-  std::shared_ptr<nvidia::isaac_ros::nitros::NitrosSubscriber> nitros_sub_;
-
-  /// Nitros type manager.
-  std::shared_ptr<nvidia::isaac_ros::nitros::NitrosTypeManager> nitros_type_manager_;
 };
 
 }  // namespace isaac_ros_benchmark

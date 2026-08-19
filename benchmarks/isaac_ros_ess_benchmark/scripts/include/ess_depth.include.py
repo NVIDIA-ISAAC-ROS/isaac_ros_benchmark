@@ -15,6 +15,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import os
+
 import isaac_ros_ess_benchmark.ess_model_utility as ess_model_utility
 
 from launch import LaunchDescription
@@ -48,13 +50,18 @@ def launch_setup(context, *args, **kwargs):
     ess_resolution = ess_model_utility.get_mode_resolution(ess_model_type)
     network_width = ess_resolution['width']
     network_height = ess_resolution['height']
+    tensor_memory_pool_block_size = network_width * network_height * 3 * 4
 
     engine_file_path = LaunchConfiguration('engine_file_path').perform(context)
     if LaunchConfigurationEquals('engine_file_path', '').evaluate(context):
         _, engine_file_path = ess_model_utility.get_model_paths(ess_model_type)
     print('\tUse ESS engine file path: {}'.format(engine_file_path))
 
-    ess_plugin_path = ess_model_utility.get_plugin_path()
+    engine_parent = os.path.dirname(engine_file_path)
+    asset_models_root = None
+    if os.path.basename(engine_parent) == 'ess':
+        asset_models_root = os.path.dirname(engine_parent)
+    ess_plugin_path = ess_model_utility.get_plugin_path(asset_models_root)
 
     left_rectify_node = ComposableNode(
         name='LeftRectifyNode',
@@ -146,7 +153,11 @@ def launch_setup(context, *args, **kwargs):
         namespace=node_namespace,
         package='isaac_ros_tensor_proc',
         plugin='nvidia::isaac_ros::dnn_inference::ImageToTensorNode',
-        parameters=[{'scale': False, 'tensor_name': 'left_image'}],
+        parameters=[{
+            'scale': False,
+            'tensor_name': 'left_image',
+            'memory_pool_block_size': tensor_memory_pool_block_size,
+        }],
         remappings=[
             ('image', 'left/image_normalize'),
             ('tensor', 'left/tensor')
@@ -238,7 +249,11 @@ def launch_setup(context, *args, **kwargs):
         namespace=node_namespace,
         package='isaac_ros_tensor_proc',
         plugin='nvidia::isaac_ros::dnn_inference::ImageToTensorNode',
-        parameters=[{'scale': False, 'tensor_name': 'right_image'}],
+        parameters=[{
+            'scale': False,
+            'tensor_name': 'right_image',
+            'memory_pool_block_size': tensor_memory_pool_block_size,
+        }],
         remappings=[
             ('image', 'right/image_normalize'),
             ('tensor', 'right/tensor')

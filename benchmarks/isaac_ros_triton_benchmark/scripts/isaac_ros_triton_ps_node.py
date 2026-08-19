@@ -52,9 +52,9 @@ NETWORK_RESOLUTION = Resolution(960, 544)
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_hallway'
 MODEL_NAME = 'peoplesemsegnet_shuffleseg'
 MODEL_CONFIG_FILE_NAME = 'peoplesemsegnet_shuffleseg/config.pbtxt'
-ENGINE_ROOT = '/tmp/models'
-ENGINE_FILE_DIR = '/tmp/models/peoplesemsegnet_shuffleseg'
-ENGINE_FILE_PATH = '/tmp/models/peoplesemsegnet_shuffleseg/1/model.plan'
+ENGINE_ROOT = '/tmp/isaac_ros_triton_ps_models'
+ENGINE_FILE_DIR = f'{ENGINE_ROOT}/peoplesemsegnet_shuffleseg'
+ENGINE_FILE_PATH = f'{ENGINE_FILE_DIR}/1/model.plan'
 
 
 def launch_setup(container_prefix, container_sigterm_timeout):
@@ -69,8 +69,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'model_repository_paths': [ENGINE_ROOT],
             'max_batch_size': 0,
             'input_tensor_names': ['input_tensor'],
-            'input_binding_names': ['input_2:0'],
-            'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
+            'input_binding_names': ['input_2'],
+            'input_tensor_formats': ['nitros_tensor_list_nhwc_rgb_f32'],
             'output_tensor_names': ['output'],
             'output_binding_names': ['argmax_1'],
             'output_tensor_formats': ['nitros_tensor_list_nhwc'],
@@ -157,7 +157,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'output_tensor_name': 'input_tensor',
             'input_tensor_shape': [NETWORK_RESOLUTION['height'], NETWORK_RESOLUTION['width'], 3],
             'output_tensor_shape': [
-                1, 3, NETWORK_RESOLUTION['height'], NETWORK_RESOLUTION['width']]
+                1, NETWORK_RESOLUTION['height'], NETWORK_RESOLUTION['width'], 3]
         }],
         remappings=[
             ('tensor', 'normalized_tensor'),
@@ -172,7 +172,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         plugin='isaac_ros_benchmark::NitrosPlaybackNode',
         parameters=[{
             'data_formats': [
-                'nitros_tensor_list_nchw_rgb_f32',
+                'nitros_tensor_list_nhwc_rgb_f32',
             ],
         }],
         remappings=[('buffer/input0', 'buffer/input'),
@@ -225,9 +225,9 @@ def generate_test_description():
             f'--onnx={MODELS_ROOT}/{MODEL_NAME}/peoplesemsegnet_shuffleseg.onnx',
             f'--saveEngine={ENGINE_FILE_PATH}',
             '--fp16',
-            '--minShapes=input_2:0:1x3x544x960',
-            '--optShapes=input_2:0:1x3x544x960',
-            '--maxShapes=input_2:0:16x3x544x960',
+            '--minShapes=input_2:1x544x960x3',
+            '--optShapes=input_2:1x544x960x3',
+            '--maxShapes=input_2:1x544x960x3',
             '--skipInference',
         ]
         TRTConverter()(trtexec_args)

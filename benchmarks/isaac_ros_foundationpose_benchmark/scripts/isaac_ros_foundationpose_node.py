@@ -94,6 +94,11 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'texture_path': TEXTURE_MAP_PATH,
             'refine_input_tensor_names': ['input_tensor1', 'input_tensor2'],
             'score_input_tensor_names': ['input_tensor1', 'input_tensor2'],
+            # The pose-estimation timeout is based on wall clock time rather than per frame
+            # processing time. If it goes off while the frame is still active, the node gets
+            # another frame before its ready, crashing the benchmark. Setting an absurdly
+            # high timeout to prevent it from going off during the benchmark.
+            'pose_estimation_timeout_ms': 600000,
         }],
         remappings=[
             ('pose_estimation/depth_image', 'depth_registered/image_rect'),

@@ -91,11 +91,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     monitor_node = ComposableNode(
         name='MonitorNode',
         namespace=TestIsaacROSOccupancyGridLocalizerNode.generate_namespace(),
-        package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        package='ros2_benchmark',
+        plugin='ros2_benchmark::MonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_pose_cov_stamped',
-            'use_nitros_type_monitor_sub': True
+            'monitor_data_format': 'geometry_msgs/msg/PoseWithCovarianceStamped',
         }],
         remappings=[
             ('output', 'localization_result')],
