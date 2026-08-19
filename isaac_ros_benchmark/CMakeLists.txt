@@ -40,7 +40,9 @@ if(USE_NVTX)
 endif()
 
 # NitrosPlaybackNode
-ament_auto_add_library(nitros_playback_node SHARED src/nitros_playback_node.cpp)
+ament_auto_add_library(nitros_playback_node SHARED
+  src/nitros_playback_node.cpp
+  src/nitros_topic_adapter.cpp)
 rclcpp_components_register_nodes(nitros_playback_node "isaac_ros_benchmark::NitrosPlaybackNode")
 set(node_plugins "${node_plugins}isaac_ros_benchmark::NitrosPlaybackNode;$<TARGET_FILE:nitros_playback_node>\n")
 set_target_properties(nitros_playback_node PROPERTIES
@@ -49,7 +51,9 @@ set_target_properties(nitros_playback_node PROPERTIES
   INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # NitrosMonitorNode
-ament_auto_add_library(nitros_monitor_node SHARED src/nitros_monitor_node.cpp)
+ament_auto_add_library(nitros_monitor_node SHARED
+  src/nitros_monitor_node.cpp
+  src/nitros_topic_adapter.cpp)
 rclcpp_components_register_nodes(nitros_monitor_node "isaac_ros_benchmark::NitrosMonitorNode")
 set(node_plugins "${node_plugins}isaac_ros_benchmark::NitrosMonitorNode;$<TARGET_FILE:nitros_monitor_node>\n")
 set_target_properties(nitros_monitor_node PROPERTIES

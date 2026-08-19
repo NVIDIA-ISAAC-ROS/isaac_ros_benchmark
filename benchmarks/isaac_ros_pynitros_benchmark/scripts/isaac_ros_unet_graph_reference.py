@@ -83,7 +83,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'output_binding_names': ['argmax_1'],
             'output_tensor_names': ['output'],
             'input_tensor_names': ['input_tensor'],
-            'input_binding_names': ['input_2:0'],
+            'input_binding_names': ['input_2'],
             'verbose': False,
             'force_engine_update': False,
             'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
@@ -182,6 +182,9 @@ def generate_test_description():
             f'--onnx={MODEL_DIR}/peoplesemsegnet_shuffleseg.onnx',
             f'--saveEngine={ENGINE_FILE_PATH}',
             '--fp16',
+            '--minShapes=input_2:1x544x960x3',
+            '--optShapes=input_2:1x544x960x3',
+            '--maxShapes=input_2:1x544x960x3',
             '--skipInference',
         ]
         TRTConverter()(trtexec_args)

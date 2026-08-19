@@ -57,9 +57,9 @@ ROSBAG_PATH = 'datasets/r2b_dataset/r2b_hope'
 MODEL_NAME = 'ketchup'
 MODEL_CONFIG_FILE_NAME = 'ketchup/config.pbtxt'
 MODEL_FILE_NAME = 'ketchup/ketchup.onnx'
-ENGINE_ROOT = '/tmp/models'
-ENGINE_FILE_DIR = '/tmp/models/ketchup'
-ENGINE_FILE_PATH = '/tmp/models/ketchup/1/model.plan'
+ENGINE_ROOT = '/tmp/isaac_ros_triton_dope_models'
+ENGINE_FILE_DIR = f'{ENGINE_ROOT}/ketchup'
+ENGINE_FILE_PATH = f'{ENGINE_FILE_DIR}/1/model.plan'
 
 
 def launch_setup(container_prefix, container_sigterm_timeout):

@@ -69,7 +69,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'output_tensor_formats': ['nitros_tensor_list_nhwc_rgb_f32'],
             'input_tensor_names': ['input_tensor'],
             'input_binding_names': ['input_2'],
-            'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
+            'input_tensor_formats': ['nitros_tensor_list_nhwc_rgb_f32'],
             'verbose': False,
             'force_engine_update': False,
         }]
@@ -169,7 +169,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         plugin='isaac_ros_benchmark::NitrosPlaybackNode',
         parameters=[{
             'data_formats': [
-                'nitros_tensor_list_nchw_rgb_f32',
+                'nitros_tensor_list_nhwc_rgb_f32',
             ],
         }],
         remappings=[('buffer/input0', 'buffer/input'),
@@ -218,6 +218,9 @@ def generate_test_description():
             f'--onnx={MODEL_DIR}/peoplesemsegnet_shuffleseg.onnx',
             f'--saveEngine={ENGINE_FILE_PATH}',
             '--fp16',
+            '--minShapes=input_2:1x544x960x3',
+            '--optShapes=input_2:1x544x960x3',
+            '--maxShapes=input_2:1x544x960x3',
             '--skipInference',
         ]
         TRTConverter()(trtexec_args)

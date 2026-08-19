@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
-// Copyright (c) 2023-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// Copyright (c) 2023-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,18 +17,19 @@
 
 #include "isaac_ros_benchmark/nitros_monitor_node.hpp"
 
-#include "isaac_ros_nitros/types/type_adapter_nitros_context.hpp"
+#include <chrono>
+#include <functional>
 
-#include "isaac_ros_nitros_camera_info_type/nitros_camera_info.hpp"
-#include "isaac_ros_nitros_detection2_d_array_type/nitros_detection2_d_array.hpp"
-#include "isaac_ros_nitros_detection3_d_array_type/nitros_detection3_d_array.hpp"
-#include "isaac_ros_nitros_disparity_image_type/nitros_disparity_image.hpp"
-#include "isaac_ros_nitros_image_type/nitros_image.hpp"
-#include "isaac_ros_nitros_tensor_list_type/nitros_tensor_list.hpp"
-#include "isaac_ros_nitros_point_cloud_type/nitros_point_cloud.hpp"
-#include "isaac_ros_nitros_pose_cov_stamped_type/nitros_pose_cov_stamped.hpp"
-#include "isaac_ros_nitros_compressed_image_type/nitros_compressed_image.hpp"
-#include "isaac_ros_nitros_occupancy_grid_type/nitros_occupancy_grid.hpp"
+#include "isaac_ros_benchmark/nitros_topic_adapter.hpp"
+
+#include "isaac_ros_tensor_list_interfaces/msg/tensor_list.hpp"
+#include "sensor_msgs/msg/camera_info.hpp"
+#include "sensor_msgs/msg/compressed_image.hpp"
+#include "sensor_msgs/msg/image.hpp"
+#include "sensor_msgs/msg/point_cloud2.hpp"
+#include "stereo_msgs/msg/disparity_image.hpp"
+#include "vision_msgs/msg/detection2_d_array.hpp"
+#include "vision_msgs/msg/detection3_d_array.hpp"
 
 namespace isaac_ros_benchmark
 {
@@ -42,20 +43,6 @@ NitrosMonitorNode::NitrosMonitorNode(const rclcpp::NodeOptions & options)
     "[NitrosMonitorNode] Starting a NITROS monitor node with a service name \"%s\"",
     monitor_service_name_.c_str());
 
-  // Create a Nitros type manager for the node
-  nitros_type_manager_ = std::make_shared<nvidia::isaac_ros::nitros::NitrosTypeManager>(this);
-
-  nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosCameraInfo>();
-  nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosDetection2DArray>();
-  nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosDetection3DArray>();
-  nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosDisparityImage>();
-  nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosImage>();
-  nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosTensorList>();
-  nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosPointCloud>();
-  nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosPoseCovStamped>();
-  nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosCompressedImage>();
-  nitros_type_manager_->registerSupportedType<nvidia::isaac_ros::nitros::NitrosOccupancyGrid>();
-
   // Create a monitor subscriber
   CreateMonitorSubscriber();
 }
@@ -63,42 +50,74 @@ NitrosMonitorNode::NitrosMonitorNode(const rclcpp::NodeOptions & options)
 void NitrosMonitorNode::CreateMonitorSubscriber()
 {
   // Create a monitor subscriber
-  if (!nitros_type_manager_->hasFormat(monitor_data_format_)) {
-    CreateGenericTypeMonitorSubscriber();
-    return;
-  }
-
   if (use_nitros_type_monitor_sub_) {
-    CreateNitrosMonitorSubscriber();
-  } else {
-    std::string ros_type_name =
-      nitros_type_manager_->getFormatCallbacks(monitor_data_format_).getROSTypeName();
-
-    #define CREATE_ROS_TYPE_MONITOR_HELPER(ROS_TYPE_NAME) \
-      if (ros_type_name == rosidl_generator_traits::name<ROS_TYPE_NAME>()) { \
-        CreateROSTypeMonitorSubscriber<ROS_TYPE_NAME>(); \
-        return; \
-      }
-
-    CREATE_ROS_TYPE_MONITOR_HELPER(sensor_msgs::msg::CameraInfo)
-    CREATE_ROS_TYPE_MONITOR_HELPER(stereo_msgs::msg::DisparityImage)
-    CREATE_ROS_TYPE_MONITOR_HELPER(sensor_msgs::msg::Image)
-    CREATE_ROS_TYPE_MONITOR_HELPER(sensor_msgs::msg::PointCloud2)
-    CREATE_ROS_TYPE_MONITOR_HELPER(sensor_msgs::msg::CompressedImage)
-    CREATE_ROS_TYPE_MONITOR_HELPER(isaac_ros_tensor_list_interfaces::msg::TensorList)
-    CREATE_ROS_TYPE_MONITOR_HELPER(nav_msgs::msg::OccupancyGrid)
-    CREATE_ROS_TYPE_MONITOR_HELPER(vision_msgs::msg::Detection2DArray)
-    CREATE_ROS_TYPE_MONITOR_HELPER(vision_msgs::msg::Detection3DArray)
-
-    {
-      std::stringstream error_msg;
-      error_msg <<
-        "[NitrosMonitorNode] Could not identify the monitor subscriber ROS type \"" <<
-        ros_type_name.c_str() << "\" was not supported";
-      RCLCPP_ERROR(get_logger(), error_msg.str().c_str());
-      throw std::runtime_error(error_msg.str().c_str());
+    auto sub = CreateNitrosMonitorSubscription(
+      *this,
+      monitor_data_format_,
+      "output",
+      ros2_benchmark::kQoS,
+      std::bind(
+        &NitrosMonitorNode::OnNitrosTimestamp,
+        this,
+        std::placeholders::_1,
+        std::placeholders::_2));
+    if (sub) {
+      monitor_sub_ = sub;
+      RCLCPP_INFO(
+        get_logger(),
+        "[NitrosMonitorNode] Created a NITROS type monitor subscriber: format=\"%s\"",
+        monitor_data_format_.c_str());
+      return;
     }
+    RCLCPP_INFO(
+      get_logger(),
+      "[NitrosMonitorNode] Unknown NITROS data format \"%s\"; falling back to "
+      "ROS type subscriber",
+      monitor_data_format_.c_str());
   }
+
+  #define CREATE_ROS_TYPE_MONITOR_HELPER(FORMAT_NAME, ROS_TYPE_NAME) \
+    if (monitor_data_format_ == FORMAT_NAME) { \
+      CreateROSTypeMonitorSubscriber<ROS_TYPE_NAME>(); \
+      return; \
+    }
+
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_camera_info", sensor_msgs::msg::CameraInfo)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_disparity_image_32FC1", stereo_msgs::msg::DisparityImage)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_disparity_image_bgr8", stereo_msgs::msg::DisparityImage)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_rgb8", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_rgba8", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_rgb16", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_bgr8", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_bgra8", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_bgr16", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_mono8", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_mono16", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_nv12", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_nv24", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_32FC1", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_32FC3", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_image_32FC4", sensor_msgs::msg::Image)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_point_cloud", sensor_msgs::msg::PointCloud2)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_compressed_image", sensor_msgs::msg::CompressedImage)
+  CREATE_ROS_TYPE_MONITOR_HELPER(
+    "nitros_tensor_list_nchw", isaac_ros_tensor_list_interfaces::msg::TensorList)
+  CREATE_ROS_TYPE_MONITOR_HELPER(
+    "nitros_tensor_list_nhwc", isaac_ros_tensor_list_interfaces::msg::TensorList)
+  CREATE_ROS_TYPE_MONITOR_HELPER(
+    "nitros_tensor_list_nchw_rgb_f32", isaac_ros_tensor_list_interfaces::msg::TensorList)
+  CREATE_ROS_TYPE_MONITOR_HELPER(
+    "nitros_tensor_list_nhwc_rgb_f32", isaac_ros_tensor_list_interfaces::msg::TensorList)
+  CREATE_ROS_TYPE_MONITOR_HELPER(
+    "nitros_tensor_list_nchw_bgr_f32", isaac_ros_tensor_list_interfaces::msg::TensorList)
+  CREATE_ROS_TYPE_MONITOR_HELPER(
+    "nitros_tensor_list_nhwc_bgr_f32", isaac_ros_tensor_list_interfaces::msg::TensorList)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_detection2_d_array", vision_msgs::msg::Detection2DArray)
+  CREATE_ROS_TYPE_MONITOR_HELPER("nitros_detection3_d_array", vision_msgs::msg::Detection3DArray)
+
+  #undef CREATE_ROS_TYPE_MONITOR_HELPER
+
+  CreateGenericTypeMonitorSubscriber();
 }
 
 template<typename ROSMessageType>
@@ -125,56 +144,6 @@ void NitrosMonitorNode::CreateROSTypeMonitorSubscriber()
     monitor_sub_->get_topic_name());
 }
 
-void NitrosMonitorNode::CreateNitrosMonitorSubscriber()
-{
-  // Load the extensions needed by the used NITROS format
-  RCLCPP_INFO(
-    get_logger(),
-    "Loading extensions for NITROS format %s",
-    monitor_data_format_.c_str());
-  nitros_type_manager_->loadExtensions(monitor_data_format_);
-
-  // Create a NITROS subscriber for monitoring
-  std::function<void(
-      const gxf_context_t,
-      nvidia::isaac_ros::nitros::NitrosTypeBase & msg_base)>
-  monitor_subscriber_callback =
-    std::bind(
-    &NitrosMonitorNode::NitrosTypeMonitorSubscriberCallback,
-    this,
-    std::placeholders::_1,
-    std::placeholders::_2);
-
-  std::vector<std::string> supported_data_formats{monitor_data_format_};
-
-  #pragma GCC diagnostic push
-  #pragma GCC diagnostic ignored "-Wpedantic"
-  nvidia::isaac_ros::nitros::NitrosPublisherSubscriberConfig nitros_sub_config = {
-    .type = nvidia::isaac_ros::nitros::NitrosPublisherSubscriberType::NEGOTIATED,
-    .qos = ros2_benchmark::kQoS,
-    .compatible_data_format = monitor_data_format_,
-    .topic_name = "output",
-    .callback = monitor_subscriber_callback,
-  };
-  #pragma GCC diagnostic pop
-
-  nvidia::isaac_ros::nitros::NitrosDiagnosticsConfig diagnostics_config = {};
-
-  nitros_sub_ = std::make_shared<nvidia::isaac_ros::nitros::NitrosSubscriber>(
-    *this,
-    nvidia::isaac_ros::nitros::GetTypeAdapterNitrosContext().getContext(),
-    nitros_type_manager_,
-    supported_data_formats,
-    nitros_sub_config,
-    diagnostics_config);
-
-  nitros_sub_->start();
-
-  RCLCPP_INFO(
-    get_logger(),
-    "[NitrosMonitorNode] Created an NITROS type monitor subscriber");
-}
-
 template<typename T>
 void NitrosMonitorNode::ROSTypeMonitorSubscriberCallback(const std::shared_ptr<T> msg)
 {
@@ -199,44 +168,17 @@ void NitrosMonitorNode::ROSTypeMonitorSubscriberCallback(const std::shared_ptr<T
   RecordEndTimestamp(timestamp_key);
 }
 
-void NitrosMonitorNode::NitrosTypeMonitorSubscriberCallback(
-  const gxf_context_t,
-  nvidia::isaac_ros::nitros::NitrosTypeBase & msg_base)
+void NitrosMonitorNode::OnNitrosTimestamp(uint32_t timestamp_sec, uint32_t timestamp_nsec)
 {
   std::lock_guard<std::mutex> lock(is_monitoring_mutex_);
   if (!is_monitoring_) {
     return;
   }
 
-  uint32_t timestamp_sec = 0;
-  uint32_t timestamp_nsec = 0;
-  bool timestamp_valid = false;
+  const uint32_t timestamp_key = revise_timestamps_as_message_ids_ ?
+    timestamp_sec : static_cast<uint32_t>(end_timestamps_.size());
 
-  if (msg_base.handle < 0) {
-    timestamp_sec = msg_base.get_timestamp_sec();
-    timestamp_nsec = msg_base.get_timestamp_nsec();
-    timestamp_valid = true;
-  } else {
-    std_msgs::msg::Header ros_header;
-    if (nvidia::isaac_ros::nitros::GetTypeAdapterNitrosContext().getEntityTimestamp(
-        msg_base.handle, ros_header) == GXF_SUCCESS)
-    {
-      timestamp_sec = ros_header.stamp.sec;
-      timestamp_nsec = ros_header.stamp.nanosec;
-      timestamp_valid = true;
-    } else {
-      RCLCPP_ERROR(get_logger(), "[NitrosMonitorNode] getEntityTimestamp Error");
-    }
-  }
-
-  uint32_t timestamp_key;
-  if (revise_timestamps_as_message_ids_) {
-    timestamp_key = timestamp_sec;
-  } else {
-    timestamp_key = end_timestamps_.size();
-  }
-
-  if (record_start_timestamps_ && timestamp_valid) {
+  if (record_start_timestamps_) {
     std::chrono::time_point<std::chrono::system_clock> start_timestamp(
       std::chrono::seconds(timestamp_sec) +
       std::chrono::nanoseconds(timestamp_nsec));
@@ -247,6 +189,5 @@ void NitrosMonitorNode::NitrosTypeMonitorSubscriberCallback(
 
 }  // namespace isaac_ros_benchmark
 
-// Register as a component
 #include "rclcpp_components/register_node_macro.hpp"
 RCLCPP_COMPONENTS_REGISTER_NODE(isaac_ros_benchmark::NitrosMonitorNode)

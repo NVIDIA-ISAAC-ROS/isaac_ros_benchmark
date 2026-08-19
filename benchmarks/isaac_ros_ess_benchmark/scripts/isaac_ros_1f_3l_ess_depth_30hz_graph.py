@@ -80,10 +80,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                 dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/left/camera_info'),
             SetRemap(
                 src='RightRectifyNode:image_raw',
-                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/left/image_raw'),
+                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/right/image_raw'),
             SetRemap(
                 src='RightRectifyNode:camera_info',
-                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/left/camera_info'),
+                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/right/camera_info'),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([launch_include_dir, '/ess_depth.include.py']),
                 launch_arguments={
@@ -113,10 +113,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                 dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/left/camera_info'),
             SetRemap(
                 src='RightRectifyNode:image_raw',
-                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/left/image_raw'),
+                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/right/image_raw'),
             SetRemap(
                 src='RightRectifyNode:camera_info',
-                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/left/camera_info'),
+                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/right/camera_info'),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([launch_include_dir, '/ess_depth.include.py']),
                 launch_arguments={
@@ -146,10 +146,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                 dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/left/camera_info'),
             SetRemap(
                 src='RightRectifyNode:image_raw',
-                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/left/image_raw'),
+                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/right/image_raw'),
             SetRemap(
                 src='RightRectifyNode:camera_info',
-                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/left/camera_info'),
+                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/right/camera_info'),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([launch_include_dir, '/ess_depth.include.py']),
                 launch_arguments={
@@ -179,10 +179,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                 dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/left/camera_info'),
             SetRemap(
                 src='RightRectifyNode:image_raw',
-                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/left/image_raw'),
+                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/right/image_raw'),
             SetRemap(
                 src='RightRectifyNode:camera_info',
-                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/left/camera_info'),
+                dst=f'{TestIsaacROSEssDepthGraph.generate_namespace()}/right/camera_info'),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([launch_include_dir, '/ess_depth.include.py']),
                 launch_arguments={

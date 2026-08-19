@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
-// Copyright (c) 2023-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// Copyright (c) 2023-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,28 +18,19 @@
 #ifndef ISAAC_ROS_BENCHMARK__NITROS_PLAYBACK_NODE_HPP_
 #define ISAAC_ROS_BENCHMARK__NITROS_PLAYBACK_NODE_HPP_
 
-#include <map>
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
-#include <utility>
-#include <vector>
 
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp/serialization.hpp"
 
 #include "ros2_benchmark/playback_node.hpp"
 
-#include "ros2_benchmark_interfaces/srv/play_messages.hpp"
-#include "ros2_benchmark_interfaces/srv/start_recording.hpp"
-#include "ros2_benchmark_interfaces/srv/stop_recording.hpp"
+#include "std_msgs/msg/header.hpp"
 
-#include "isaac_ros_nitros/types/nitros_type_base.hpp"
-#include "isaac_ros_nitros/types/nitros_type_manager.hpp"
-#include "isaac_ros_nitros/nitros_publisher.hpp"
-
-#include "negotiated/negotiated_publisher.hpp"
-
+#include "isaac_ros_benchmark/nitros_topic_adapter.hpp"
 
 namespace isaac_ros_benchmark
 {
@@ -53,7 +44,7 @@ enum class NitrosPlaybackNodePubSubType : uint8_t
 class NitrosPlaybackNode : public ros2_benchmark::PlaybackNode
 {
 public:
-  /// Construct a new NitrosPlaybackNode object;
+  /// Construct a new NitrosPlaybackNode object.
   explicit NitrosPlaybackNode(const rclcpp::NodeOptions &);
 
 private:
@@ -75,12 +66,6 @@ private:
     const size_t message_index,
     const std::optional<std_msgs::msg::Header> & header) override;
 
-  /// A NITROS subscriber callback function for recording the received messages.
-  void NitrosTypeRecordingSubscriberCallback(
-    std::shared_ptr<nvidia::isaac_ros::nitros::NitrosTypeBase> msg_base,
-    std::string data_format_name,
-    size_t buffer_index);
-
   /// Get the count of all the recorded messages.
   uint64_t GetRecordedMessageCount() const override;
 
@@ -93,19 +78,9 @@ private:
   /// A map between the pub/sub indices and their types (generic or NITROS).
   std::unordered_map<size_t, NitrosPlaybackNodePubSubType> data_format_pub_sub_types_;
 
-  /// Buffers for storing NITROS-typed data.
-  /// Using shared_ptr to avoid object slicing when storing derived types
-  std::unordered_map<size_t,
-    std::vector<std::shared_ptr<nvidia::isaac_ros::nitros::NitrosTypeBase>>>
-  nitros_msg_buffers_{};
-
-  /// NITROS publishers that publish the buffered NITROS-typed messages (converted
-  /// from the input subscribers.)
-  std::unordered_map<size_t, std::shared_ptr<nvidia::isaac_ros::nitros::NitrosPublisher>>
-  nitros_pubs_;
-
-  /// NITROS type manager
-  std::shared_ptr<nvidia::isaac_ros::nitros::NitrosTypeManager> nitros_type_manager_;
+  /// NITROS-type pub/sub + buffer adapters keyed by data_formats_ index. Each
+  /// adapter owns a typed Publisher<T>/Subscription<T>/buffer<T> trio.
+  std::unordered_map<size_t, std::unique_ptr<NitrosPlaybackTopicAdapter>> nitros_adapters_;
 };
 
 }  // namespace isaac_ros_benchmark

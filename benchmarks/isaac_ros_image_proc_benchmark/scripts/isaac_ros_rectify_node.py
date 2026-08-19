@@ -50,6 +50,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         parameters=[{
             'output_width': IMAGE_RESOLUTION['width'],
             'output_height': IMAGE_RESOLUTION['height'],
+            'memory_pool_num_blocks': 1024,
         }],
         remappings=[('image_raw', 'image')]
     )

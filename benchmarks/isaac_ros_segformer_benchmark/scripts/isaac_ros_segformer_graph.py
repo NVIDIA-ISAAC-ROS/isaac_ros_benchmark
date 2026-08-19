@@ -104,6 +104,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         plugin='nvidia::isaac_ros::unet::UNetDecoderNode',
         parameters=[{
             'network_output_type': 'argmax',
+            'data_format': 'NCHW',
             'color_segmentation_mask_encoding': 'rgb8',
             'color_palette': [0x556B2F, 0x800000, 0x008080, 0x000080, 0x9ACD32, 0xFF0000,
                               0xFF8C00, 0xFFD700, 0x00FF00, 0xBA55D3, 0x00FA9A, 0x00FFFF,

@@ -42,8 +42,9 @@ Required:
 - Datasets:
     - assets/datasets/r2b_dataset/r2b_robotarm
 - Models:
-    - assets/models/segment_anything2/sam2.onnx
-    - assets/models/segment_anything2/config.pbtxt
+    - assets/models/triton/segment_anything2/1/model.onnx
+    - assets/models/triton/segment_anything2/config.pbtxt
+    - assets/models/triton/segment_anything2/warmup
 """
 
 import os
@@ -65,12 +66,13 @@ SAM_NETWORK_RESOLUTION = Resolution(1024, 1024)
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_robotarm'
 
 MODEL_NAME = 'segment_anything2'
-MODEL_CONFIG_FILE_NAME = 'segment_anything2/config.pbtxt'
-MODEL_FILE_NAME = 'segment_anything2/sam2.onnx'
+MODEL_REPOSITORY_NAME = 'triton'
+MODEL_CONFIG_FILE_NAME = f'{MODEL_REPOSITORY_NAME}/{MODEL_NAME}/config.pbtxt'
+MODEL_FILE_NAME = f'{MODEL_REPOSITORY_NAME}/{MODEL_NAME}/1/model.onnx'
+MODEL_WARMUP_DIR_NAME = f'{MODEL_REPOSITORY_NAME}/{MODEL_NAME}/warmup'
 
-TRITON_REPO_PATH = ['/tmp/models/']
-TRITON_MODEL_DIR = '/tmp/models/segment_anything2/1/'
-TRITON_CONFIG_PATH = '/tmp/models/segment_anything2/'
+TRITON_REPO_PATH = '/tmp/isaac_ros_segment_anything2_benchmark_models'
+TRITON_MODEL_DIR = os.path.join(TRITON_REPO_PATH, MODEL_NAME)
 
 
 def launch_setup(container_prefix, container_sigterm_timeout):
@@ -216,7 +218,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         plugin='nvidia::isaac_ros::dnn_inference::TritonNode',
         parameters=[{
             'model_name': MODEL_NAME,
-            'model_repository_paths': TRITON_REPO_PATH,
+            'model_repository_paths': [TRITON_REPO_PATH],
             'max_batch_size': 1,
             'input_tensor_names': ['image', 'bbox_coords', 'point_coords', 'point_labels',
                                    'mask_memory', 'obj_ptr_memory', 'original_size',
@@ -243,8 +245,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         package='isaac_ros_segment_anything',
         plugin='nvidia::isaac_ros::segment_anything::SegmentAnythingDecoderNode',
         parameters=[{
-            'mask_width': SAM_NETWORK_RESOLUTION['width'],
-            'mask_height': SAM_NETWORK_RESOLUTION['height'],
+            'mask_width': IMAGE_RESOLUTION['width'],
+            'mask_height': IMAGE_RESOLUTION['height'],
             'max_batch_size': 5,
             'tensor_name': 'high_res_masks'
         }],
@@ -330,16 +332,15 @@ def generate_test_description():
     print(MODEL_FILE_PATH)
     if not os.path.isfile(MODEL_FILE_PATH):
         raise SystemExit('Model file not found.')
+    if not os.path.isfile(os.path.join(MODELS_ROOT, MODEL_CONFIG_FILE_NAME)):
+        raise SystemExit('Model config file not found.')
+    if not os.path.isdir(os.path.join(MODELS_ROOT, MODEL_WARMUP_DIR_NAME)):
+        raise SystemExit('Model warmup directory not found.')
 
-    if not os.path.exists(os.path.dirname(TRITON_MODEL_DIR)):
-        os.makedirs(os.path.dirname(TRITON_MODEL_DIR))
-
-    shutil.copy(
-        os.path.join(MODELS_ROOT, MODEL_CONFIG_FILE_NAME),
-        TRITON_CONFIG_PATH)
-    shutil.copy(
-        MODEL_FILE_PATH,
-        os.path.join(TRITON_MODEL_DIR, 'model.onnx'))
+    shutil.rmtree(TRITON_MODEL_DIR, ignore_errors=True)
+    shutil.copytree(
+        os.path.join(MODELS_ROOT, MODEL_REPOSITORY_NAME, MODEL_NAME),
+        TRITON_MODEL_DIR)
 
     return TestIsaacROSSegmentAnything2Graph.generate_test_description_with_nsys(launch_setup)
 
