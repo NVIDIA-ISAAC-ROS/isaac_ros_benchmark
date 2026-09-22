@@ -193,7 +193,6 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                                    SAM_NETWORK_RESOLUTION['width']],
             'output_tensor_shape': [1, 3, SAM_NETWORK_RESOLUTION['height'],
                                     SAM_NETWORK_RESOLUTION['width']],
-            'reshaped_tensor_nitros_format': 'nitros_tensor_list_nchw_rgb_f32',
         }],
         remappings=[
             ('tensor', 'segment_anything/planar_tensor'),
@@ -240,10 +239,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                                    'has_input_mask', 'orig_img_dims'],
             'input_binding_names': ['images', 'point_coords', 'point_labels', 'mask_input',
                                     'has_mask_input', 'orig_im_size'],
-            'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
             'output_tensor_names': ['masks', 'iou', 'low_res_mask'],
             'output_binding_names': ['masks', 'iou_predictions', 'low_res_masks'],
-            'output_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32']
         }],
         remappings=[
             ('tensor_pub', 'segment_anything/encoded_data'),
@@ -412,10 +409,12 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSSegmentAnythingGraph.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
             'data_formats': [
-                'nitros_image_rgb8', 'nitros_camera_info', 'nitros_detection2_d_array'
+                'sensor_msgs/msg/Image',
+                'sensor_msgs/msg/CameraInfo',
+                'vision_msgs/msg/Detection2DArray',
             ],
         }],
         remappings=[
@@ -432,10 +431,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='MonitorNode',
         namespace=TestIsaacROSSegmentAnythingGraph.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        plugin='isaac_ros_benchmark::BufferMonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_tensor_list_nchw',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'isaac_ros_tensor_msgs/msg/TensorList',
         }],
         remappings=[
             ('output', 'segment_anything/raw_segmentation_mask')

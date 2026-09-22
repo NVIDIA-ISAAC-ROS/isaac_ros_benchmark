@@ -98,13 +98,13 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSDisparityNode.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
             'data_formats': [
-                'nitros_image_bgr8',
-                'nitros_image_bgr8',
-                'nitros_camera_info',
-                'nitros_camera_info'
+                'sensor_msgs/msg/Image',
+                'sensor_msgs/msg/Image',
+                'sensor_msgs/msg/CameraInfo',
+                'sensor_msgs/msg/CameraInfo'
             ],
         }],
         remappings=[('buffer/input0', 'buffer/left/image_rect'),
@@ -119,12 +119,11 @@ def launch_setup(container_prefix, container_sigterm_timeout):
 
     monitor_node = ComposableNode(
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        plugin='isaac_ros_benchmark::BufferMonitorNode',
         namespace=TestIsaacROSDisparityNode.generate_namespace(),
         name='MonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_disparity_image_32FC1',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'stereo_msgs/msg/DisparityImage',
         }],
         remappings=[
             ('output', 'disparity')],

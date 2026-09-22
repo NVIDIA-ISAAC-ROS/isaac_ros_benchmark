@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>isaac_ros_segment_anything_benchmark</name>
-  <version>4.6.0</version>
+  <version>5.0.0</version>
   <description>Scripts for benchmarking Isaac ROS Segment Anything graphs</description>
 
   <maintainer email="isaac-ros-maintainers@nvidia.com">Isaac ROS Maintainers</maintainer>
@@ -37,6 +37,8 @@ SPDX-License-Identifier: Apache-2.0
   <depend>isaac_ros_benchmark</depend>
   <depend>isaac_ros_triton</depend>
   <depend>isaac_ros_segment_anything</depend>
+  <depend>isaac_ros_rtdetr</depend>
+  <depend>isaac_ros_tensor_rt</depend>
   <depend>isaac_ros_tensor_proc</depend>
   <depend>isaac_ros_image_proc</depend>
 

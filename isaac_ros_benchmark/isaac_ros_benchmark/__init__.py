@@ -17,12 +17,12 @@
 
 """Imports for isaac_ros_benchmark module."""
 
+from .buffer_monitor_utility import BufferMonitorUtility
 from .isaac_ros_tensor_utility import TensorUtility
 from .model_converter import TaoConverter, TRTConverter
-from .nitros_monitor_utility import NitrosMonitorUtility
 
 __all__ = [
-    'NitrosMonitorUtility',
+    'BufferMonitorUtility',
     'TaoConverter',
     'TensorUtility',
     'TRTConverter',

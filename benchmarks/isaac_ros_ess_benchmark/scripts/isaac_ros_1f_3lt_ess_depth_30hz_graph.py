@@ -29,7 +29,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 
-from isaac_ros_benchmark import NitrosMonitorUtility
+from isaac_ros_benchmark.buffer_monitor_utility import BufferMonitorUtility
 
 import isaac_ros_ess_benchmark.ess_benchmark_utility as ess_benchmark_utility
 import isaac_ros_ess_benchmark.ess_model_utility as ess_model_utility
@@ -42,9 +42,8 @@ from launch_ros.descriptions import ComposableNode
 from ros2_benchmark import ROS2BenchmarkConfig, ROS2BenchmarkTest
 
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_hideaway'
-TYPE_NEGOTIATION_DURATION_S = '10'
 
-NITROS_MONITOR_UTILITY = NitrosMonitorUtility()
+BUFFER_MONITOR_UTILITY = BufferMonitorUtility()
 
 
 def launch_setup(container_prefix, container_sigterm_timeout):
@@ -89,7 +88,6 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                 launch_arguments={
                     'container_name': 'benchmark_container',
                     'node_namespace': 'full_ess_1',
-                    'type_negotiation_duration_s': TYPE_NEGOTIATION_DURATION_S,
                     'ess_model_type': 'full',
                     'engine_file_path': full_ess_engine_file_path,
                 }.items(),
@@ -97,7 +95,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         ]
     ))
     monitor_nodes.extend(ess_benchmark_utility.create_ess_depth_graph_monitors(
-        NITROS_MONITOR_UTILITY,
+        BUFFER_MONITOR_UTILITY,
         TestIsaacROSEssDepthGraph.generate_namespace(),
         'full_ess_1',
         message_key_match=False))
@@ -122,7 +120,6 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                 launch_arguments={
                     'container_name': 'benchmark_container',
                     'node_namespace': 'light_ess_2',
-                    'type_negotiation_duration_s': TYPE_NEGOTIATION_DURATION_S,
                     'ess_model_type': 'light',
                     'engine_file_path': light_ess_engine_file_path,
                     'ess_throttler_skip': '1',
@@ -131,7 +128,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         ]
     ))
     monitor_nodes.extend(ess_benchmark_utility.create_ess_depth_graph_monitors(
-        NITROS_MONITOR_UTILITY,
+        BUFFER_MONITOR_UTILITY,
         TestIsaacROSEssDepthGraph.generate_namespace(),
         'light_ess_2',
         message_key_match=False))
@@ -156,7 +153,6 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                 launch_arguments={
                     'container_name': 'benchmark_container',
                     'node_namespace': 'light_ess_3',
-                    'type_negotiation_duration_s': TYPE_NEGOTIATION_DURATION_S,
                     'ess_model_type': 'light',
                     'engine_file_path': light_ess_engine_file_path,
                     'ess_throttler_skip': '1',
@@ -165,7 +161,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         ]
     ))
     monitor_nodes.extend(ess_benchmark_utility.create_ess_depth_graph_monitors(
-        NITROS_MONITOR_UTILITY,
+        BUFFER_MONITOR_UTILITY,
         TestIsaacROSEssDepthGraph.generate_namespace(),
         'light_ess_3',
         message_key_match=False))
@@ -190,7 +186,6 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                 launch_arguments={
                     'container_name': 'benchmark_container',
                     'node_namespace': 'light_ess_4',
-                    'type_negotiation_duration_s': TYPE_NEGOTIATION_DURATION_S,
                     'ess_model_type': 'light',
                     'engine_file_path': light_ess_engine_file_path,
                     'ess_throttler_skip': '1',
@@ -199,7 +194,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         ]
     ))
     monitor_nodes.extend(ess_benchmark_utility.create_ess_depth_graph_monitors(
-        NITROS_MONITOR_UTILITY,
+        BUFFER_MONITOR_UTILITY,
         TestIsaacROSEssDepthGraph.generate_namespace(),
         'light_ess_4',
         message_key_match=False))
@@ -221,13 +216,13 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSEssDepthGraph.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
             'data_formats': [
-                'nitros_image_rgb8',
-                'nitros_camera_info',
-                'nitros_image_rgb8',
-                'nitros_camera_info'
+                'sensor_msgs/msg/Image',
+                'sensor_msgs/msg/CameraInfo',
+                'sensor_msgs/msg/Image',
+                'sensor_msgs/msg/CameraInfo'
             ],
         }],
         remappings=[
@@ -284,5 +279,5 @@ class TestIsaacROSEssDepthGraph(ROS2BenchmarkTest):
     )
 
     def test_benchmark(self):
-        self.config.monitor_info_list = NITROS_MONITOR_UTILITY.get_monitor_info_list()
+        self.config.monitor_info_list = BUFFER_MONITOR_UTILITY.get_monitor_info_list()
         self.run_benchmark()

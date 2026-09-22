@@ -68,9 +68,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSRectifyNode.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
-            'data_formats': ['nitros_image_bgr8', 'nitros_camera_info'],
+            'data_formats': ['sensor_msgs/msg/Image', 'sensor_msgs/msg/CameraInfo'],
         }],
         remappings=[('buffer/input0', 'buffer/image'),
                     ('input0', 'image'),
@@ -82,10 +82,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='MonitorNode',
         namespace=TestIsaacROSRectifyNode.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        plugin='isaac_ros_benchmark::BufferMonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_image_bgr8',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'sensor_msgs/msg/Image',
         }],
         remappings=[
             ('output', 'image_rect')],
@@ -122,8 +121,9 @@ class TestIsaacROSRectifyNode(ROS2BenchmarkTest):
         benchmark_name='Isaac ROS RectifyNode Benchmark',
         input_data_path=ROSBAG_PATH,
         # Upper and lower bounds of peak throughput search window
-        publisher_upper_frequency=2500.0,
+        publisher_upper_frequency=10000.0,
         publisher_lower_frequency=10.0,
+        linear_scan_step_size=50.0,
         # The number of frames to be buffered
         playback_message_buffer_size=10,
         custom_report_info={'data_resolution': IMAGE_RESOLUTION}

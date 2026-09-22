@@ -45,14 +45,15 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from moveit_configs_utils import MoveItConfigsBuilder
 from moveit_configs_utils.launches import generate_move_group_launch
-import os
-from ament_index_python.packages import get_package_share_directory
 import yaml
-from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration
-from launch.actions import DeclareLaunchArgument
 
 
 def generate_launch_description():
@@ -62,24 +63,31 @@ def generate_launch_description():
     declare_default_planning_pipeline_cmd = DeclareLaunchArgument(
         'default_planning_pipeline',
         default_value='isaac_ros_cumotion',  # Fallback to cuMotion as default
-        description='Default planning pipeline to use'
+        description='Default planning pipeline to use',
     )
 
     moveit_config = MoveItConfigsBuilder(
-        'ur5_robotiq_85', package_name='ur5_gripper_moveit_config').to_moveit_configs()
+        'ur5_robotiq_85', package_name='ur5_gripper_moveit_config'
+    ).to_moveit_configs()
     cumotion_config_file_path = os.path.join(
         get_package_share_directory('isaac_ros_cumotion_moveit'),
         'config',
-        'isaac_ros_cumotion_planning.yaml'
+        'isaac_ros_cumotion_planning.yaml',
     )
     with open(cumotion_config_file_path) as cumotion_config_file:
         cumotion_config = yaml.safe_load(cumotion_config_file)
 
-    moveit_config.planning_pipelines['planning_pipelines'].insert(0, 'isaac_ros_cumotion')
+    moveit_config.planning_pipelines['planning_pipelines'].insert(
+        0, 'isaac_ros_cumotion'
+    )
     moveit_config.planning_pipelines['isaac_ros_cumotion'] = cumotion_config
-    moveit_config.planning_pipelines['default_planning_pipeline'] = default_planning_pipeline
+    moveit_config.planning_pipelines['default_planning_pipeline'] = (
+        default_planning_pipeline
+    )
 
-    return LaunchDescription([
-        declare_default_planning_pipeline_cmd,
-        generate_move_group_launch(moveit_config)
-    ])
+    return LaunchDescription(
+        [
+            declare_default_planning_pipeline_cmd,
+            generate_move_group_launch(moveit_config),
+        ]
+    )

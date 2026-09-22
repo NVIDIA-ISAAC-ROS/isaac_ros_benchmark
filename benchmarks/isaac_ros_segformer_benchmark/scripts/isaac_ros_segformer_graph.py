@@ -21,7 +21,7 @@ The graph consists of the following:
 - Preprocessors:
     None
 - Graph under Test:
-    1. DnnImageEncoderNode: turns raw images into resized, normalized tensors
+    1. DNN image encoder launch graph: turns raw images into resized, normalized tensors
     2. TensorRTNode: runs PeopleSemSegformer to detect "person" objects
     3. UNetDecoderNode: converts inference results to segmentation masks
 
@@ -93,8 +93,6 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'input_binding_names': ['input'],
             'verbose': False,
             'force_engine_update': False,
-            'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
-            'output_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32']
         }])
 
     segformer_decoder_node = ComposableNode(
@@ -125,9 +123,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSSegformerGraph.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
-            'data_formats': ['nitros_image_rgb8', 'nitros_camera_info'],
+            'data_formats': ['sensor_msgs/msg/Image', 'sensor_msgs/msg/CameraInfo'],
         }],
         remappings=[('buffer/input0', 'data_loader/image'),
                     ('input0', 'image'),
@@ -139,10 +137,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='MonitorNode',
         namespace=TestIsaacROSSegformerGraph.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        plugin='isaac_ros_benchmark::BufferMonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_image_rgb8',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'sensor_msgs/msg/Image',
         }],
         remappings=[
             ('output', 'unet/raw_segmentation_mask')],

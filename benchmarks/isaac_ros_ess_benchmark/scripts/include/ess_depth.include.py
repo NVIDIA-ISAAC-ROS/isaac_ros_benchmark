@@ -34,7 +34,6 @@ def launch_setup(context, *args, **kwargs):
 
     container_name = LaunchConfiguration('container_name')
     node_namespace = LaunchConfiguration('node_namespace')
-    type_negotiation_duration_s = LaunchConfiguration('type_negotiation_duration_s')
 
     ess_model_type = ''
     if LaunchConfigurationEquals('ess_model_type', 'full').evaluate(context):
@@ -71,7 +70,6 @@ def launch_setup(context, *args, **kwargs):
         parameters=[{
             'output_width': HAWK_RESOLUTION['width'],
             'output_height': HAWK_RESOLUTION['height'],
-            'type_negotiation_duration_s': type_negotiation_duration_s,
         }],
         remappings=[
             ('image_raw', 'left/image_raw'),
@@ -89,7 +87,6 @@ def launch_setup(context, *args, **kwargs):
         parameters=[{
             'output_width': HAWK_RESOLUTION['width'],
             'output_height': HAWK_RESOLUTION['height'],
-            'type_negotiation_duration_s': type_negotiation_duration_s,
         }],
         remappings=[
             ('image_raw', 'right/image_raw'),
@@ -106,7 +103,6 @@ def launch_setup(context, *args, **kwargs):
         plugin='nvidia::isaac_ros::image_proc::ImageFormatConverterNode',
         parameters=[{
             'encoding_desired': 'rgb8',
-            'type_negotiation_duration_s': type_negotiation_duration_s,
         }],
         remappings=[
             ('image_raw', 'left/image_rect'),
@@ -123,7 +119,6 @@ def launch_setup(context, *args, **kwargs):
             'output_width': network_width,
             'output_height': network_height,
             'keep_aspect_ratio': False,
-            'type_negotiation_duration_s': type_negotiation_duration_s,
         }],
         remappings=[
             ('image', 'left/image_rgb'),
@@ -202,7 +197,6 @@ def launch_setup(context, *args, **kwargs):
         plugin='nvidia::isaac_ros::image_proc::ImageFormatConverterNode',
         parameters=[{
             'encoding_desired': 'rgb8',
-            'type_negotiation_duration_s': type_negotiation_duration_s,
         }],
         remappings=[
             ('image_raw', 'right/image_rect'),
@@ -219,7 +213,6 @@ def launch_setup(context, *args, **kwargs):
             'output_width': network_width,
             'output_height': network_height,
             'keep_aspect_ratio': False,
-            'type_negotiation_duration_s': type_negotiation_duration_s,
         }],
         remappings=[
             ('image', 'right/image_rgb'),
@@ -322,7 +315,6 @@ def launch_setup(context, *args, **kwargs):
             'verbose': False,
             'force_engine_update': False,
             'custom_plugin_lib': ess_plugin_path,
-            'type_negotiation_duration_s': type_negotiation_duration_s,
         }]
     )
 
@@ -337,7 +329,6 @@ def launch_setup(context, *args, **kwargs):
             'confidence_threshold': 0.4,
             'cache_camera_info': True,
             'reusable_buffer_enable': False,
-            'type_negotiation_duration_s': type_negotiation_duration_s,
         }],
         remappings=[
             ('right/camera_info', 'right/camera_info_resize')
@@ -349,9 +340,6 @@ def launch_setup(context, *args, **kwargs):
         namespace=node_namespace,
         package='isaac_ros_stereo_image_proc',
         plugin='nvidia::isaac_ros::stereo_image_proc::DisparityToDepthNode',
-        parameters=[{
-            'type_negotiation_duration_s': type_negotiation_duration_s,
-        }],
     )
 
     load_nodes = LoadComposableNodes(
@@ -392,11 +380,6 @@ def generate_launch_description():
             'node_namespace',
             description='Node namespace',
             default_value='defaul_node_namespace',
-        ),
-        DeclareLaunchArgument(
-            'type_negotiation_duration_s',
-            description='Duration of the NITROS type negotiation.',
-            default_value='5',
         ),
         DeclareLaunchArgument(
             'ess_model_type',

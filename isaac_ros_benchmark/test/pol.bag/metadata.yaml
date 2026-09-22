@@ -19,10 +19,10 @@ rosbag2_bagfile_information:
         serialization_format: cdr
         offered_qos_profiles: "- history: 3\n  depth: 0\n  reliability: 1\n  durability: 2\n  deadline:\n    sec: 9223372036\n    nsec: 854775807\n  lifespan:\n    sec: 9223372036\n    nsec: 854775807\n  liveliness: 1\n  liveliness_lease_duration:\n    sec: 9223372036\n    nsec: 854775807\n  avoid_ros_namespace_conventions: false"
       message_count: 80
-  compression_format: zstd
-  compression_mode: FILE
+  compression_format: ""
+  compression_mode: ""
   relative_file_paths:
-    - pol.bag_0.db3.zstd
+    - pol.bag_0.db3
   files:
     - path: pol.bag_0.db3
       starting_time:
