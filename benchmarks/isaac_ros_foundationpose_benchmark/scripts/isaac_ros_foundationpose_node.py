@@ -351,11 +351,11 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSFoundationPoseGraph.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
             'data_formats': [
-                'nitros_image_32FC1', 'nitros_image_rgb8',
-                'nitros_camera_info', 'nitros_image_mono8'
+                'sensor_msgs/msg/Image', 'sensor_msgs/msg/Image',
+                'sensor_msgs/msg/CameraInfo', 'sensor_msgs/msg/Image'
             ],
         }],
         remappings=[
@@ -481,7 +481,7 @@ class TestIsaacROSFoundationPoseGraph(ROS2BenchmarkTest):
         input_data_start_time=2.1,
         input_data_end_time=2.2,
         # Upper and lower bounds of peak throughput search window
-        publisher_upper_frequency=10,
+        publisher_upper_frequency=5,
         publisher_lower_frequency=1,
         # The number of frames to be buffered
         playback_message_buffer_size=1,

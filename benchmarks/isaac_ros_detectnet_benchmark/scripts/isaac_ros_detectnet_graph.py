@@ -22,7 +22,7 @@ The graph consists of the following:
 - Preprocessors:
     None
 - Graph under Test:
-    1. DnnImageEncoderNode: turns raw images into resized, normalized tensors
+    1. DNN image encoder launch graph: turns raw images into resized, normalized tensors
     2. TritonNode: runs PeopleNet to detect pedestrians
     3. DetectNetDecoderNode:  turns tensors into detection arrays
 
@@ -102,10 +102,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'model_repository_paths': [ENGINE_ROOT],
             'input_tensor_names': ['input_tensor'],
             'input_binding_names': ['input_1:0'],
-            'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
             'output_tensor_names': ['output_cov', 'output_bbox'],
             'output_binding_names': ['output_cov/Sigmoid:0', 'output_bbox/BiasAdd:0'],
-            'output_tensor_formats': ['nitros_tensor_list_nhwc_rgb_f32'],
         }]
     )
 
@@ -145,9 +143,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TesetIsaacROSDetectNet.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
-            'data_formats': ['nitros_image_bgr8', 'nitros_camera_info'],
+            'data_formats': ['sensor_msgs/msg/Image', 'sensor_msgs/msg/CameraInfo'],
         }],
         remappings=[('buffer/input0', 'data_loader/image'),
                     ('input0', 'image'),
@@ -158,11 +156,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     monitor_node = ComposableNode(
         name='MonitorNode',
         namespace=TesetIsaacROSDetectNet.generate_namespace(),
-        package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        package='ros2_benchmark',
+        plugin='ros2_benchmark::MonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_detection2_d_array',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'vision_msgs/msg/Detection2DArray',
         }],
         remappings=[
             ('output', 'detectnet/detections')],

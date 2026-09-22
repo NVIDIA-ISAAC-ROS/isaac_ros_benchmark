@@ -66,10 +66,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'engine_file_path': ENGINE_FILE_PATH,
             'output_binding_names': ['argmax_1'],
             'output_tensor_names': ['output'],
-            'output_tensor_formats': ['nitros_tensor_list_nhwc_rgb_f32'],
             'input_tensor_names': ['input_tensor'],
             'input_binding_names': ['input_2'],
-            'input_tensor_formats': ['nitros_tensor_list_nhwc_rgb_f32'],
             'verbose': False,
             'force_engine_update': False,
         }]
@@ -166,10 +164,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSTensorRTNode.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
             'data_formats': [
-                'nitros_tensor_list_nhwc_rgb_f32',
+                'isaac_ros_tensor_msgs/msg/TensorList',
             ],
         }],
         remappings=[('buffer/input0', 'buffer/input'),
@@ -180,10 +178,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='MonitorNode',
         namespace=TestIsaacROSTensorRTNode.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        plugin='isaac_ros_benchmark::BufferMonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_tensor_list_nhwc_rgb_f32',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'isaac_ros_tensor_msgs/msg/TensorList',
         }],
     )
 

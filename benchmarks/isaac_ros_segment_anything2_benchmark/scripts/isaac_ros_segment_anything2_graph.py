@@ -187,7 +187,6 @@ def launch_setup(container_prefix, container_sigterm_timeout):
                                    SAM_NETWORK_RESOLUTION['width']],
             'output_tensor_shape': [1, 3, SAM_NETWORK_RESOLUTION['height'],
                                     SAM_NETWORK_RESOLUTION['width']],
-            'reshaped_tensor_nitros_format': 'nitros_tensor_list_nchw_rgb_f32',
         }],
         remappings=[
             ('tensor', 'segment_anything2/planar_tensor'),
@@ -226,12 +225,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'input_binding_names': ['image', 'bbox_coords', 'point_coords', 'point_labels',
                                     'mask_memory', 'obj_ptr_memory', 'original_size',
                                     'permutation'],
-            'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
             'output_tensor_names': ['high_res_masks', 'object_score_logits',
                                     'maskmem_features', 'maskmem_pos_enc', 'obj_ptr_features'],
             'output_binding_names': ['high_res_masks', 'object_score_logits',
                                      'maskmem_features', 'maskmem_pos_enc', 'obj_ptr_features'],
-            'output_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
         }],
         remappings=[
             ('tensor_pub', 'segment_anything2/encoded_data'),
@@ -270,10 +267,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSSegmentAnything2Graph.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
             'data_formats': [
-                'nitros_image_rgb8', 'nitros_camera_info'
+                'sensor_msgs/msg/Image', 'sensor_msgs/msg/CameraInfo'
             ],
         }],
         remappings=[
@@ -288,10 +285,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='MonitorNode',
         namespace=TestIsaacROSSegmentAnything2Graph.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        plugin='isaac_ros_benchmark::BufferMonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_tensor_list_nchw',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'isaac_ros_tensor_msgs/msg/TensorList',
         }],
         remappings=[
             ('output', 'segment_anything2/raw_segmentation_mask')

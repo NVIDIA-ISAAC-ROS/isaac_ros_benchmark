@@ -374,11 +374,12 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSFoundationPoseGraph.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
             'data_formats': [
-                'nitros_image_32FC1', 'nitros_image_rgb8', 'nitros_camera_info',
-                'nitros_tensor_list_nchw',
+                'sensor_msgs/msg/Image', 'sensor_msgs/msg/Image',
+                'sensor_msgs/msg/CameraInfo',
+                'isaac_ros_tensor_msgs/msg/TensorList',
             ],
         }],
         remappings=[
@@ -500,7 +501,7 @@ class TestIsaacROSFoundationPoseGraph(ROS2BenchmarkTest):
         input_data_start_time=2.1,
         input_data_end_time=2.2,
         # Upper and lower bounds of peak throughput search window
-        publisher_upper_frequency=300.0,
+        publisher_upper_frequency=1200.0,
         publisher_lower_frequency=1.0,
         benchmark_duration=5,
         # Playback probes can run for benchmark_duration seconds; keep future timeout above that.

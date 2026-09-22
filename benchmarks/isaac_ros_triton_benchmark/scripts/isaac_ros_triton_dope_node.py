@@ -75,10 +75,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'max_batch_size': 0,
             'input_tensor_names': ['input_tensor'],
             'input_binding_names': ['input'],
-            'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
             'output_tensor_names': ['output'],
             'output_binding_names': ['output'],
-            'output_tensor_formats': ['nitros_tensor_list_nhwc_rgb_f32'],
         }],
         remappings=[('tensor_pub', 'input'), ('tensor_sub', 'output')]
     )
@@ -104,6 +102,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'network_image_height': str(NETWORK_RESOLUTION['height']),
             'image_mean': str([0.5, 0.5, 0.5]),
             'image_stddev': str([0.5, 0.5, 0.5]),
+            'input_encoding': 'bgr8',
             'encoding_desired': 'rgb8',
             'image_input_topic': 'data_loader/image',
             'camera_info_input_topic': 'data_loader/camera_info',
@@ -120,10 +119,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSTritonNode.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
             'data_formats': [
-                'nitros_tensor_list_nchw_rgb_f32',
+                'isaac_ros_tensor_msgs/msg/TensorList',
             ],
         }],
         remappings=[('buffer/input0', 'buffer/input'),
@@ -134,10 +133,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='MonitorNode',
         namespace=TestIsaacROSTritonNode.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        plugin='isaac_ros_benchmark::BufferMonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_tensor_list_nhwc_rgb_f32',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'isaac_ros_tensor_msgs/msg/TensorList',
         }],
     )
 

@@ -80,9 +80,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSOccupancyGridLocalizerNode.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
-            'data_formats': ['nitros_flat_scan']
+            'data_formats': ['isaac_ros_pointcloud_interfaces/msg/FlatScan']
         }],
         remappings=[('buffer/input0', 'buffer/flatscan_localization'),
                     ('input0', 'flatscan_localization')],

@@ -28,35 +28,36 @@ find_package(ament_cmake_python REQUIRED)
 ament_auto_find_build_dependencies()
 ament_python_install_package(${PROJECT_NAME})
 
-# Ensure CUDA imported targets (e.g., CUDA::nvtx3) are available
 find_package(CUDAToolkit REQUIRED)
 
-# NVTX
-option(USE_NVTX "Enable NVTX markers for improved profiling (if available)" ON)
-if(USE_NVTX)
-    add_definitions(-DUSE_NVTX)
-    link_directories("${CUDA_TOOLKIT_ROOT_DIR}/lib64")
-    link_libraries("CUDA::nvtx3")
-endif()
-
-# NitrosPlaybackNode
-ament_auto_add_library(nitros_playback_node SHARED
-  src/nitros_playback_node.cpp
-  src/nitros_topic_adapter.cpp)
-rclcpp_components_register_nodes(nitros_playback_node "isaac_ros_benchmark::NitrosPlaybackNode")
-set(node_plugins "${node_plugins}isaac_ros_benchmark::NitrosPlaybackNode;$<TARGET_FILE:nitros_playback_node>\n")
-set_target_properties(nitros_playback_node PROPERTIES
+# BufferPlaybackNode
+ament_auto_add_library(buffer_playback_node SHARED
+  src/buffer_playback_node.cpp)
+target_link_libraries(buffer_playback_node CUDA::cuda_driver CUDA::cudart)
+rclcpp_components_register_nodes(
+  buffer_playback_node "isaac_ros_benchmark::BufferPlaybackNode")
+set_target_properties(buffer_playback_node PROPERTIES
   BUILD_WITH_INSTALL_RPATH TRUE
   BUILD_RPATH_USE_ORIGIN TRUE
   INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-# NitrosMonitorNode
-ament_auto_add_library(nitros_monitor_node SHARED
-  src/nitros_monitor_node.cpp
-  src/nitros_topic_adapter.cpp)
-rclcpp_components_register_nodes(nitros_monitor_node "isaac_ros_benchmark::NitrosMonitorNode")
-set(node_plugins "${node_plugins}isaac_ros_benchmark::NitrosMonitorNode;$<TARGET_FILE:nitros_monitor_node>\n")
-set_target_properties(nitros_monitor_node PROPERTIES
+# rosidl buffer topic adapters
+ament_auto_add_library(rosidl_buffer_topic_adapters SHARED
+  src/rosidl_buffer_topic_adapters.cpp)
+target_link_libraries(rosidl_buffer_topic_adapters CUDA::cuda_driver CUDA::cudart)
+pluginlib_export_plugin_description_file(
+  isaac_ros_benchmark buffer_message_plugins.xml)
+set_target_properties(rosidl_buffer_topic_adapters PROPERTIES
+  BUILD_WITH_INSTALL_RPATH TRUE
+  BUILD_RPATH_USE_ORIGIN TRUE
+  INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# BufferMonitorNode
+ament_auto_add_library(buffer_monitor_node SHARED
+  src/buffer_monitor_node.cpp)
+rclcpp_components_register_nodes(
+  buffer_monitor_node "isaac_ros_benchmark::BufferMonitorNode")
+set_target_properties(buffer_monitor_node PROPERTIES
   BUILD_WITH_INSTALL_RPATH TRUE
   BUILD_RPATH_USE_ORIGIN TRUE
   INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -81,8 +82,8 @@ if(BUILD_TESTING)
 
   find_package(launch_testing_ament_cmake REQUIRED)
 
-  add_launch_test(test/nitros_playback_node_pol.py TIMEOUT "60")
-  add_launch_test(test/nitros_monitor_node_pol.py TIMEOUT "60")
+  add_launch_test(test/buffer_playback_node_pol.py TIMEOUT "60")
+  add_launch_test(test/buffer_monitor_node_pol.py TIMEOUT "60")
 endif()
 
 

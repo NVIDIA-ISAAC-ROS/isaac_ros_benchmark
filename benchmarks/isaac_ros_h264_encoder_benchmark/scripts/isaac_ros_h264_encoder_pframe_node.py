@@ -82,9 +82,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSEncoderNode.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
-            'data_formats': ['nitros_image_bgr8'],
+            'data_formats': ['sensor_msgs/msg/Image'],
         }],
         remappings=[('buffer/input0', 'buffer/image_raw'),
                     ('input0', 'image_raw')]
@@ -94,10 +94,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='MonitorNode',
         namespace=TestIsaacROSEncoderNode.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        plugin='isaac_ros_benchmark::BufferMonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_compressed_image',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'sensor_msgs/msg/CompressedImage',
         }],
         remappings=[
             ('output', 'image_compressed')],
@@ -117,7 +116,8 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             monitor_node,
             encoder_node
         ],
-        output='screen'
+        output='screen',
+        arguments=['--ros-args', '--log-level', 'warn'],
     )
 
     return [composable_node_container]

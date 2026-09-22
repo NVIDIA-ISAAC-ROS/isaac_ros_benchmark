@@ -95,9 +95,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSAprilTagGraph.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
-            'data_formats': ['nitros_image_bgr8', 'nitros_camera_info'],
+            'data_formats': ['sensor_msgs/msg/Image', 'sensor_msgs/msg/CameraInfo'],
         }],
         remappings=[('buffer/input0', 'buffer/image'),
                     ('input0', 'image_raw'),
@@ -108,11 +108,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     monitor_node = ComposableNode(
         name='MonitorNode',
         namespace=TestIsaacROSAprilTagGraph.generate_namespace(),
-        package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        package='ros2_benchmark',
+        plugin='ros2_benchmark::MonitorNode',
         parameters=[{
             'monitor_data_format': 'isaac_ros_apriltag_interfaces/msg/AprilTagDetectionArray',
-            'use_nitros_type_monitor_sub': False,
         }],
         remappings=[
             ('output', 'apriltag_detections')],

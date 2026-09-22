@@ -199,9 +199,9 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSRtDetr.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
-            'data_formats': ['nitros_image_bgr8', 'nitros_camera_info'],
+            'data_formats': ['sensor_msgs/msg/Image', 'sensor_msgs/msg/CameraInfo'],
         }],
         remappings=[
             ('buffer/input0', 'data_loader/image_raw'),

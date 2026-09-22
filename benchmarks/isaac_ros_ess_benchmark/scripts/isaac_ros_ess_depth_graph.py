@@ -28,7 +28,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 
-from isaac_ros_benchmark import NitrosMonitorUtility
+from isaac_ros_benchmark.buffer_monitor_utility import BufferMonitorUtility
 
 import isaac_ros_ess_benchmark.ess_benchmark_utility as ess_benchmark_utility
 import isaac_ros_ess_benchmark.ess_model_utility as ess_model_utility
@@ -42,7 +42,7 @@ from ros2_benchmark import ROS2BenchmarkConfig, ROS2BenchmarkTest
 
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_hideaway'
 
-NITROS_MONITOR_UTILITY = NitrosMonitorUtility()
+BUFFER_MONITOR_UTILITY = BufferMonitorUtility()
 
 
 def launch_setup(container_prefix, container_sigterm_timeout):
@@ -75,7 +75,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         }.items(),
     )
     monitor_nodes.extend(ess_benchmark_utility.create_ess_depth_graph_monitors(
-        NITROS_MONITOR_UTILITY,
+        BUFFER_MONITOR_UTILITY,
         TestIsaacROSEssDepthGraph.generate_namespace(),
         message_key_match=False))
 
@@ -96,13 +96,13 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSEssDepthGraph.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
             'data_formats': [
-                'nitros_image_rgb8',
-                'nitros_camera_info',
-                'nitros_image_rgb8',
-                'nitros_camera_info'
+                'sensor_msgs/msg/Image',
+                'sensor_msgs/msg/CameraInfo',
+                'sensor_msgs/msg/Image',
+                'sensor_msgs/msg/CameraInfo'
             ],
         }],
         remappings=[
@@ -151,5 +151,5 @@ class TestIsaacROSEssDepthGraph(ROS2BenchmarkTest):
     )
 
     def test_benchmark(self):
-        self.config.monitor_info_list = NITROS_MONITOR_UTILITY.get_monitor_info_list()
+        self.config.monitor_info_list = BUFFER_MONITOR_UTILITY.get_monitor_info_list()
         self.run_benchmark()

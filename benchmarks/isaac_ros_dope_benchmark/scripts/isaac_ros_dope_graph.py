@@ -21,7 +21,7 @@ The graph (without pose refinement) consists of the following:
 - Preprocessors:
     None
 - Graph under Test:
-    1. DnnImageEncoderNode: turns a raw image into a resized, normalized tensor
+    1. DNN image encoder launch graph: turns a raw image into a resized, normalized tensor
     2. TensorRTNode: converts an input tensor into a tensor of belief map
     3. DopeDecoder: converts a belief map into an Detection3DArray with all poses
 
@@ -69,13 +69,28 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'input_image_height': str(IMAGE_RESOLUTION['height']),
             'network_image_width': str(NETWORK_RESOLUTION['width']),
             'network_image_height': str(NETWORK_RESOLUTION['height']),
+            'input_encoding': 'rgb8',
             'encoding_desired': 'rgb8',
+            'image_input_topic': 'image_rgb',
+            'camera_info_input_topic': 'camera_info',
             'tensor_output_topic': 'tensor_pub',
             'tensor_name': 'input_tensor',
             'attach_to_shared_component_container': 'True',
             'component_container_name': f'{dnn_image_encoder_namespace}/container',
             'dnn_image_encoder_namespace': dnn_image_encoder_namespace,
         }.items(),
+    )
+
+    image_format_converter_node = ComposableNode(
+        name='ImageFormatConverter',
+        namespace=TestIsaacROSDeepObjectPoseEstimation.generate_namespace(),
+        package='isaac_ros_image_proc',
+        plugin='nvidia::isaac_ros::image_proc::ImageFormatConverterNode',
+        parameters=[{
+            'encoding_desired': 'rgb8',
+        }],
+        remappings=[('image_raw', 'image'),
+                    ('image', 'image_rgb')]
     )
 
     dope_inference_node = ComposableNode(
@@ -99,6 +114,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         package='isaac_ros_dope',
         plugin='nvidia::isaac_ros::dope::DopeDecoderNode',
         parameters=[{
+            'object_name': 'Ketchup',
             'frame_id': 'dope'
         }],
         remappings=[('belief_map_array', 'tensor_sub'),
@@ -118,7 +134,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSDeepObjectPoseEstimation.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
             'data_formats': ['sensor_msgs/msg/Image',
                              'sensor_msgs/msg/CameraInfo'],
@@ -132,11 +148,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     monitor_node = ComposableNode(
         name='MonitorNode',
         namespace=TestIsaacROSDeepObjectPoseEstimation.generate_namespace(),
-        package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        package='ros2_benchmark',
+        plugin='ros2_benchmark::MonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_detection3_d_array',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'vision_msgs/msg/Detection3DArray',
         }],
         remappings=[
             ('output', 'detections')],
@@ -152,6 +167,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         composable_node_descriptions=[
             data_loader_node,
             playback_node,
+            image_format_converter_node,
             monitor_node,
             dope_inference_node,
             dope_decoder_node

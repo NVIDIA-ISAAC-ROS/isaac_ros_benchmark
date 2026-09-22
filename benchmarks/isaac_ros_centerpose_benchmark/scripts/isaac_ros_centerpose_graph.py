@@ -22,7 +22,7 @@ The graph consists of the following:
 - Preprocessors:
     None
 - Graph under Test:
-    1. DnnImageEncoderNode: turns raw images into resized, normalized tensors
+    1. DNN image encoder launch graph: turns raw images into resized, normalized tensors
     2. TensorRTNode: runs CenterPose model to estimate the 6DOF pose of target objects
     3. CenterPoseDecoderNode:  turns tensors into 3d detections
 
@@ -57,9 +57,9 @@ NETWORK_RESOLUTION = Resolution(512, 512)
 ROSBAG_PATH = 'datasets/r2b_dataset/r2b_storage'
 MODEL_NAME = 'centerpose_shoe'
 MODEL_CONFIG_FILE_NAME = 'centerpose_shoe/config.pbtxt'
-ENGINE_ROOT = '/tmp/models'
-ENGINE_FILE_DIR = '/tmp/models/centerpose_shoe'
-ENGINE_FILE_PATH = '/tmp/models/centerpose_shoe/1/model.plan'
+ENGINE_ROOT = '/tmp/isaac_ros_centerpose_models'
+ENGINE_FILE_DIR = f'{ENGINE_ROOT}/centerpose_shoe'
+ENGINE_FILE_PATH = f'{ENGINE_FILE_DIR}/1/model.plan'
 
 
 def launch_setup(container_prefix, container_sigterm_timeout):
@@ -96,14 +96,12 @@ def launch_setup(container_prefix, container_sigterm_timeout):
             'model_repository_paths': [ENGINE_ROOT],
             'input_tensor_names': ['input_tensor'],
             'input_binding_names': ['input'],
-            'input_tensor_formats': ['nitros_tensor_list_nchw_rgb_f32'],
             'output_tensor_names': ['bboxes', 'scores', 'kps', 'clses',
                                     'obj_scale', 'kps_displacement_mean',
                                     'kps_heatmap_mean'],
             'output_binding_names': ['bboxes', 'scores', 'kps', 'clses',
                                      'obj_scale', 'kps_displacement_mean',
                                      'kps_heatmap_mean'],
-            'output_tensor_formats': ['nitros_tensor_list_nhwc_rgb_f32'],
         }])
 
     centerpose_decoder_node = ComposableNode(
@@ -138,7 +136,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         name='PlaybackNode',
         namespace=TestIsaacROSCenterPose.generate_namespace(),
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
             'data_formats': ['sensor_msgs/msg/Image',
                              'sensor_msgs/msg/CameraInfo'],
@@ -152,11 +150,10 @@ def launch_setup(container_prefix, container_sigterm_timeout):
     monitor_node = ComposableNode(
         name='MonitorNode',
         namespace=TestIsaacROSCenterPose.generate_namespace(),
-        package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        package='ros2_benchmark',
+        plugin='ros2_benchmark::MonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_detection3_d_array',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'vision_msgs/msg/Detection3DArray',
         }],
         remappings=[
             ('output', 'poses')],

@@ -1,0 +1,74 @@
+<library path="rosidl_buffer_topic_adapters">
+  <class
+    name="sensor_msgs/msg/Image"
+    type="isaac_ros_benchmark::ImageBufferPlaybackTopicAdapter"
+    base_class_type="isaac_ros_benchmark::BufferPlaybackTopicAdapter">
+    <description>Playback adapter for CUDA-backed sensor_msgs/Image.</description>
+  </class>
+  <class
+    name="sensor_msgs/msg/CompressedImage"
+    type="isaac_ros_benchmark::CompressedImageBufferPlaybackTopicAdapter"
+    base_class_type="isaac_ros_benchmark::BufferPlaybackTopicAdapter">
+    <description>Playback adapter for CUDA-backed sensor_msgs/CompressedImage.</description>
+  </class>
+  <class
+    name="sensor_msgs/msg/PointCloud2"
+    type="isaac_ros_benchmark::PointCloud2BufferPlaybackTopicAdapter"
+    base_class_type="isaac_ros_benchmark::BufferPlaybackTopicAdapter">
+    <description>Playback adapter for CUDA-backed sensor_msgs/PointCloud2.</description>
+  </class>
+  <class
+    name="stereo_msgs/msg/DisparityImage"
+    type="isaac_ros_benchmark::DisparityImageBufferPlaybackTopicAdapter"
+    base_class_type="isaac_ros_benchmark::BufferPlaybackTopicAdapter">
+    <description>Playback adapter for CUDA-backed stereo_msgs/DisparityImage.</description>
+  </class>
+  <class
+    name="isaac_ros_tensor_msgs/msg/TensorList"
+    type="isaac_ros_benchmark::TensorListBufferPlaybackTopicAdapter"
+    base_class_type="isaac_ros_benchmark::BufferPlaybackTopicAdapter">
+    <description>Playback adapter for CUDA-backed TensorList messages.</description>
+  </class>
+  <class
+    name="isaac_ros_pointcloud_interfaces/msg/FlatScan"
+    type="isaac_ros_benchmark::FlatScanBufferPlaybackTopicAdapter"
+    base_class_type="isaac_ros_benchmark::BufferPlaybackTopicAdapter">
+    <description>Playback adapter for FlatScan messages.</description>
+  </class>
+  <class
+    name="sensor_msgs/msg/Image"
+    type="isaac_ros_benchmark::ImageBufferMonitorTopicAdapter"
+    base_class_type="isaac_ros_benchmark::BufferMonitorTopicAdapter">
+    <description>Monitor adapter for CUDA-backed sensor_msgs/Image.</description>
+  </class>
+  <class
+    name="sensor_msgs/msg/CompressedImage"
+    type="isaac_ros_benchmark::CompressedImageBufferMonitorTopicAdapter"
+    base_class_type="isaac_ros_benchmark::BufferMonitorTopicAdapter">
+    <description>Monitor adapter for CUDA-backed sensor_msgs/CompressedImage.</description>
+  </class>
+  <class
+    name="sensor_msgs/msg/PointCloud2"
+    type="isaac_ros_benchmark::PointCloud2BufferMonitorTopicAdapter"
+    base_class_type="isaac_ros_benchmark::BufferMonitorTopicAdapter">
+    <description>Monitor adapter for CUDA-backed sensor_msgs/PointCloud2.</description>
+  </class>
+  <class
+    name="stereo_msgs/msg/DisparityImage"
+    type="isaac_ros_benchmark::DisparityImageBufferMonitorTopicAdapter"
+    base_class_type="isaac_ros_benchmark::BufferMonitorTopicAdapter">
+    <description>Monitor adapter for CUDA-backed stereo_msgs/DisparityImage.</description>
+  </class>
+  <class
+    name="isaac_ros_tensor_msgs/msg/TensorList"
+    type="isaac_ros_benchmark::TensorListBufferMonitorTopicAdapter"
+    base_class_type="isaac_ros_benchmark::BufferMonitorTopicAdapter">
+    <description>Monitor adapter for CUDA-backed TensorList messages.</description>
+  </class>
+  <class
+    name="isaac_ros_pointcloud_interfaces/msg/FlatScan"
+    type="isaac_ros_benchmark::FlatScanBufferMonitorTopicAdapter"
+    base_class_type="isaac_ros_benchmark::BufferMonitorTopicAdapter">
+    <description>Monitor adapter for FlatScan messages.</description>
+  </class>
+</library>

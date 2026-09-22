@@ -15,13 +15,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 """
-Performance test for Isaac ROS DnnImageEncoderNode.
+Performance test for the Isaac ROS DNN image encoder launch graph.
 
 The graph consists of the following:
 - Preprocessors:
     None
 - Graph under Test:
-    1. DnnImageEncoderNode: turns raw images into resized, normalized tensors
+    1. DNN image encoder launch graph: turns raw images into resized, normalized tensors
 
 Required:
 - Packages:
@@ -30,6 +30,11 @@ Required:
     - assets/datasets/r2b_dataset/r2b_hallway
 """
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 from ros2_benchmark import Resolution, ROS2BenchmarkConfig, ROS2BenchmarkTest
@@ -40,29 +45,37 @@ INPUT_TENSOR_DIMENSIONS = [1, 3, IMAGE_RESOLUTION['width'], IMAGE_RESOLUTION['he
 
 
 def launch_setup(container_prefix, container_sigterm_timeout):
-    """Generate launch description for benchmarking Isaac ROS DnnImageEncoderNode."""
-    dnn_image_encoder_node = ComposableNode(
-        name='dnn_image_encoder_node',
-        package='isaac_ros_dnn_image_encoder',
-        plugin='nvidia::isaac_ros::dnn_inference::DnnImageEncoderNode',
-        namespace=TestIsaacROSDnnImageEncoderNode.generate_namespace(),
-        parameters=[{
-            'input_image_width': 1920,
-            'input_image_height': 1080,
-            'network_image_width': 512,
-            'network_image_height': 512,
+    """Generate launch description for benchmarking the DNN image encoder graph."""
+    namespace = TestIsaacROSDnnImageEncoderGraph.generate_namespace()
+    dnn_image_encoder_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('isaac_ros_dnn_image_encoder'),
+                'launch',
+                'dnn_image_encoder.launch.py',
+            )
+        ),
+        launch_arguments={
+            'input_image_width': '1920',
+            'input_image_height': '1080',
+            'network_image_width': '512',
+            'network_image_height': '512',
             'input_encoding': 'bgr8',
-            'image_mean': [0.5, 0.5, 0.5],
-            'image_stddev': [0.5, 0.5, 0.5],
-            'enable_padding': True,
-            'tensor_output_topic': 'tensors',
-            'dnn_image_encoder_namespace': TestIsaacROSDnnImageEncoderNode.generate_namespace(),
-        }],
-        remappings=[('image', 'image'), ('tensors', 'output')])
+            'image_mean': '[0.5, 0.5, 0.5]',
+            'image_stddev': '[0.5, 0.5, 0.5]',
+            'enable_padding': 'True',
+            'dnn_image_encoder_namespace': namespace,
+            'image_input_topic': 'image',
+            'camera_info_input_topic': 'camera_info',
+            'tensor_output_topic': 'output',
+            'attach_to_shared_component_container': 'True',
+            'component_container_name': f'{namespace}/container',
+        }.items(),
+    )
 
     data_loader_node = ComposableNode(
         name='DataLoaderNode',
-        namespace=TestIsaacROSDnnImageEncoderNode.generate_namespace(),
+        namespace=namespace,
         package='ros2_benchmark',
         plugin='ros2_benchmark::DataLoaderNode',
         remappings=[('hawk_0_left_rgb_image', 'data_loader/image'),
@@ -71,11 +84,11 @@ def launch_setup(container_prefix, container_sigterm_timeout):
 
     playback_node = ComposableNode(
         name='PlaybackNode',
-        namespace=TestIsaacROSDnnImageEncoderNode.generate_namespace(),
+        namespace=namespace,
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosPlaybackNode',
+        plugin='isaac_ros_benchmark::BufferPlaybackNode',
         parameters=[{
-            'data_formats': ['nitros_image_bgr8', 'nitros_camera_info'],
+            'data_formats': ['sensor_msgs/msg/Image', 'sensor_msgs/msg/CameraInfo'],
         }],
         remappings=[('buffer/input0', 'data_loader/image'),
                     ('input0', 'image'),
@@ -85,12 +98,11 @@ def launch_setup(container_prefix, container_sigterm_timeout):
 
     monitor_node = ComposableNode(
         name='MonitorNode',
-        namespace=TestIsaacROSDnnImageEncoderNode.generate_namespace(),
+        namespace=namespace,
         package='isaac_ros_benchmark',
-        plugin='isaac_ros_benchmark::NitrosMonitorNode',
+        plugin='isaac_ros_benchmark::BufferMonitorNode',
         parameters=[{
-            'monitor_data_format': 'nitros_tensor_list_nchw_rgb_f32',
-            'use_nitros_type_monitor_sub': True,
+            'monitor_data_format': 'isaac_ros_tensor_msgs/msg/TensorList',
         }],
         remappings=[
             ('output', 'output')],
@@ -98,13 +110,12 @@ def launch_setup(container_prefix, container_sigterm_timeout):
 
     composable_node_container = ComposableNodeContainer(
         name='container',
-        namespace=TestIsaacROSDnnImageEncoderNode.generate_namespace(),
+        namespace=namespace,
         package='rclcpp_components',
         executable='component_container_mt',
         prefix=container_prefix,
         sigterm_timeout=container_sigterm_timeout,
         composable_node_descriptions=[
-            dnn_image_encoder_node,
             data_loader_node,
             playback_node,
             monitor_node,
@@ -112,19 +123,19 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         output='screen'
     )
 
-    return [composable_node_container]
+    return [composable_node_container, dnn_image_encoder_launch]
 
 
 def generate_test_description():
-    return TestIsaacROSDnnImageEncoderNode.generate_test_description_with_nsys(launch_setup)
+    return TestIsaacROSDnnImageEncoderGraph.generate_test_description_with_nsys(launch_setup)
 
 
-class TestIsaacROSDnnImageEncoderNode(ROS2BenchmarkTest):
-    """Performance test for Isaac ROS DnnImageEncoderNode."""
+class TestIsaacROSDnnImageEncoderGraph(ROS2BenchmarkTest):
+    """Performance test for the Isaac ROS DNN image encoder launch graph."""
 
     # Custom configurations
     config = ROS2BenchmarkConfig(
-        benchmark_name='Isaac ROS DnnImageEncoderNode Benchmark',
+        benchmark_name='Isaac ROS DNN Image Encoder Graph Benchmark',
         input_data_path=ROSBAG_PATH,
         # Upper and lower bounds of peak throughput search window
         publisher_upper_frequency=6000.0,
