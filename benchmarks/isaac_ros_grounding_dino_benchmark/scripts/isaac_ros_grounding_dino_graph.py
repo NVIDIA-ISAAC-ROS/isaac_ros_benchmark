@@ -297,7 +297,9 @@ class TestIsaacROSGroundingDino(ROS2BenchmarkTest):
         input_data_path=ROSBAG_PATH,
         # Upper and lower bounds of peak throughput search window
         publisher_upper_frequency=1000.0,
-        publisher_lower_frequency=10.0,
+        publisher_lower_frequency=1.0,
+        binary_search_terminal_interval_width=0.5,
+        linear_scan_step_size=0.5,
         # The number of frames to be buffered
         playback_message_buffer_size=1,
         pre_trial_run_wait_time_sec=5.0,

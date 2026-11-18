@@ -28,6 +28,10 @@ ament_auto_find_build_dependencies()
 ament_python_install_package(${PROJECT_NAME})
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_pytest REQUIRED)
+  ament_add_pytest_test(test_ess_benchmark_utility
+    test/test_ess_benchmark_utility.py)
+
   find_package(ament_lint_auto REQUIRED)
 
   # Ignore copyright notices since we use custom NVIDIA Isaac ROS Software License

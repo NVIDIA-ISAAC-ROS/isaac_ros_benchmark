@@ -28,7 +28,6 @@ The graph consists of the following:
 
 Required:
 - Packages:
-    - isaac_ros_foundationstereo
     - isaac_ros_dnn_stereo_decoder
     - isaac_ros_image_proc
     - isaac_ros_tensor_proc
@@ -427,9 +426,23 @@ class TestIsaacROSFoundationStereoGraph(ROS2BenchmarkTest):
     config = ROS2BenchmarkConfig(
         benchmark_name='Isaac ROS FoundationStereo Graph Benchmark',
         input_data_path=ROSBAG_PATH,
-        # Upper and lower bounds of peak throughput search window
+        # Resolve sub-Hz throughput without selecting the lower search bound.
         publisher_upper_frequency=20.0,
-        publisher_lower_frequency=1.0,
+        publisher_lower_frequency=0.1,
+        # Shorten coarse probes, but validate the linear seed at full duration.
+        binary_search_duration_fraction=0.25,
+        binary_search_terminal_interval_width=0.025,
+        linear_scan_step_size=0.025,
+        binary_search_acceptable_frame_rate_drop=0.05,
+        linear_scan_acceptable_frame_rate_drop=0.05,
+        binary_search_acceptable_frame_loss_fraction=0.0,
+        linear_scan_acceptable_frame_loss_fraction=0.0,
+        benchmark_duration=60.0,
+        test_iterations=5,
+        # Allow slow inference to finish before starting a new measurement.
+        post_trial_run_wait_time_sec=15.0,
+        pre_stop_monitoring_wait_time_sec=15.0,
+        play_messages_service_future_timeout_sec=120.0,
         # The number of frames to be buffered
         playback_message_buffer_size=1,
         pre_trial_run_wait_time_sec=5.0,
