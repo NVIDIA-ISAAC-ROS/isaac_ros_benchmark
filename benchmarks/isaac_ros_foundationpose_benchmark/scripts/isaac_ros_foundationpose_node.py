@@ -482,17 +482,23 @@ class TestIsaacROSFoundationPoseGraph(ROS2BenchmarkTest):
         input_data_end_time=2.2,
         # Upper and lower bounds of peak throughput search window
         publisher_upper_frequency=5,
-        publisher_lower_frequency=1,
+        publisher_lower_frequency=0.1,
+        # Gather enough frames when pose estimation runs below 1 Hz.
+        benchmark_duration=30.0,
+        play_messages_service_future_timeout_sec=120.0,
+        # Allow outstanding work to settle before search and monitor shutdown.
+        post_trial_run_wait_time_sec=30.0,
+        pre_stop_monitoring_wait_time_sec=10.0,
         # The number of frames to be buffered
         playback_message_buffer_size=1,
         # Binary search parameters
-        binary_search_terminal_interval_width=0.3,
-        binary_search_acceptable_frame_loss_fraction=0.7,
-        binary_search_acceptable_frame_rate_drop=0.2,
+        binary_search_terminal_interval_width=0.05,
+        binary_search_acceptable_frame_loss_fraction=0.0,
+        binary_search_acceptable_frame_rate_drop=0.1,
         # Linear search parameters
-        linear_scan_acceptable_frame_loss_fraction=0.7,
-        linear_scan_acceptable_frame_rate_drop=0.2,
-        linear_scan_step_size=0.1,
+        linear_scan_acceptable_frame_loss_fraction=0.0,
+        linear_scan_acceptable_frame_rate_drop=0.1,
+        linear_scan_step_size=0.05,
         custom_report_info={
             'data_resolution': IMAGE_RESOLUTION
         }

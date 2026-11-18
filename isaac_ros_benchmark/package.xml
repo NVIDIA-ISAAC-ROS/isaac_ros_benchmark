@@ -20,7 +20,7 @@
    SPDX-License-Identifier: Apache-2.0
   -->
   <name>isaac_ros_benchmark</name>
-  <version>5.0.0</version>
+  <version>5.1.0</version>
   <description>Isaac ROS benchmarking utilities</description>
 
   <maintainer email="isaac-ros-maintainers@nvidia.com">Isaac ROS Maintainers</maintainer>

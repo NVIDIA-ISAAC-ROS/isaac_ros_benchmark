@@ -147,6 +147,8 @@ class TestIsaacROSEssDepthGraph(ROS2BenchmarkTest):
         # The number of frames to be buffered
         playback_message_buffer_size=10,
         pre_trial_run_wait_time_sec=5.0,
+        # Allow discarded cold-start work to settle before measured iterations.
+        post_trial_run_wait_time_sec=5.0,
         additional_fixed_publisher_rate_tests=[],
         monitor_info_list=[]
     )

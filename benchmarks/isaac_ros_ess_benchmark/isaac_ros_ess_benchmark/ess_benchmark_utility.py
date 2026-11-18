@@ -23,6 +23,15 @@ def create_ess_depth_graph_monitors(
     generic_monitor_nodes = []
     title_prefix = f'({node_namespace}) ' if node_namespace else ''
     node_name_prefix = f'{node_namespace}_' if node_namespace else ''
+    # Peak search uses the first registered monitor, so measure final depth.
+    if monitor_topics is None or 'depth' in monitor_topics:
+        monitor_nodes.append(buffer_monitor_utility.add_basic_perf_buffer_monitor(
+            test_namespace,
+            node_namespace, 'sensor_msgs/msg/Image', 'depth',
+            f'{title_prefix}Depth',
+            monitor_name=f'{node_name_prefix}DepthMonitorNode',
+            message_key_match=message_key_match
+        ))
     # rectified left image
     if monitor_topics is None or 'left/image_rect' in monitor_topics:
         monitor_nodes.append(buffer_monitor_utility.add_basic_perf_buffer_monitor(
@@ -102,15 +111,6 @@ def create_ess_depth_graph_monitors(
             node_namespace, 'stereo_msgs/msg/DisparityImage', 'disparity',
             f'{title_prefix}Disparity',
             monitor_name=f'{node_name_prefix}DisparityMonitorNode',
-            message_key_match=message_key_match
-        ))
-    # depth
-    if monitor_topics is None or 'depth' in monitor_topics:
-        monitor_nodes.append(buffer_monitor_utility.add_basic_perf_buffer_monitor(
-            test_namespace,
-            node_namespace, 'sensor_msgs/msg/Image', 'depth',
-            f'{title_prefix}Depth',
-            monitor_name=f'{node_name_prefix}DepthMonitorNode',
             message_key_match=message_key_match
         ))
     return generic_monitor_nodes + monitor_nodes

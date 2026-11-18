@@ -147,6 +147,8 @@ class TestIsaacROSEssDepthGraph(ROS2BenchmarkTest):
         # The number of frames to be buffered
         playback_message_buffer_size=10,
         pre_trial_run_wait_time_sec=5.0,
+        # Let cold CUDA initialization finish before checking the minimum rate.
+        post_trial_run_wait_time_sec=10.0,
         monitor_info_list=[]
     )
 

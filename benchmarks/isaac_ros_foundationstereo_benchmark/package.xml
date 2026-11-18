@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>isaac_ros_foundationstereo_benchmark</name>
-  <version>5.0.0</version>
+  <version>5.1.0</version>
   <description>Scripts for benchmarking Isaac ROS FoundationStereo graphs</description>
 
   <maintainer email="isaac-ros-maintainers@nvidia.com">Isaac ROS Maintainers</maintainer>
@@ -37,7 +37,7 @@ SPDX-License-Identifier: Apache-2.0
   <depend>isaac_ros_benchmark</depend>
   <depend>isaac_ros_image_proc</depend>
   <depend>isaac_ros_stereo_image_proc</depend>
-  <depend>isaac_ros_foundationstereo</depend>
+  <depend>isaac_ros_dnn_stereo_decoder</depend>
   <depend>isaac_ros_tensor_proc</depend>
   <depend>isaac_ros_tensor_rt</depend>
 
